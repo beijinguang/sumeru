@@ -105,7 +105,8 @@ jobs:
             else
               echo "🎉 首个发布版本。"
             fi
-          } > CHANGELOG.md
+          # 写入临时目录，仅作为 gh release 的 notes，不入库（避免长期未跟踪文件）
+          } > "${RUNNER_TEMP}/release-notes.md"
 
       - name: Update version files
         if: steps.prep.outputs.skip != 'true'
@@ -136,8 +137,8 @@ jobs:
           fi
 
           git tag -a "v${NEW_VERSION}" -m "Release v${NEW_VERSION}"
-          git push origin master "v${NEW_VERSION}"
+          git push origin HEAD "v${NEW_VERSION}"
 
           gh release create "v${NEW_VERSION}" \
             --title "v${NEW_VERSION}" \
-            --notes-file CHANGELOG.md
+            --notes-file "${RUNNER_TEMP}/release-notes.md"

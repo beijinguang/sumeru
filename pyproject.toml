@@ -1,0 +1,18 @@
+[project]
+name = "sumeru-skills"
+description = "网文创作全流程 Skill 集合（sumeru 二开版）：选题 → 拆书 → 大纲 → 写作 → 审查 → 润色 → 完稿导出"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "beijinguang" }]
+keywords = ["novel", "writing", "claude-skills", "web-fiction"]
+# 无运行时依赖：所有脚本仅使用 Python 标准库
+dependencies = []
+# 版本号动态读取 VERSION 文件，与发布流程保持同源
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = { file = "VERSION" }
+
+[tool.setuptools]
+packages = []
