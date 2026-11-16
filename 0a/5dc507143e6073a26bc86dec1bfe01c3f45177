@@ -1,0 +1,20 @@
+skills/sumeru-outline/SKILL.md
+  h_414dea22084ef6 222
+skills/sumeru-outline/references/common-naming-library.md
+  h_414dea22084ef6 3,5,7-9,56-58
+skills/sumeru-outline/references/data-schemas.md
+  h_414dea22084ef6 9-12,19-24,56-57
+skills/sumeru-review/references/timeline-schema.md
+  h_414dea22084ef6 69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "0a5dc507143e6073a26bc86dec1bfe01c3f45177",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
