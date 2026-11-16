@@ -127,6 +127,22 @@ class Handler(BaseHTTPRequestHandler):
     def do_PUT(self):
         self._dispatch_write("PUT")
 
+    def do_HEAD(self):
+        """导出文件存在性探测（前端下载列表用）"""
+        parsed = urlparse(self.path)
+        path = unquote(parsed.path)
+        if path.startswith("/api/export/"):
+            parts = path[len("/api/export/"):].split("/", 1)
+            code, _ = api.get_export(ROOT, parts[0], unquote(parts[1])) if len(parts) == 2 \
+                else (400, None)
+            self.send_response(code)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return
+        self.send_response(404)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
+
     def _dispatch_write(self, method):
         parsed = urlparse(self.path)
         path = unquote(parsed.path)

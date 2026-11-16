@@ -27,7 +27,8 @@ def backup_before_write(chapters_dir, filename, dot_sumeru=None):
 
     write_root = (Path(dot_sumeru) if dot_sumeru else src.parent.parent / ".sumeru") / "write"
     original_dir = write_root / ORIGINAL_DIR
-    history_dir = write_root / f"{HISTORY_PREFIX}{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}"
+    # 对齐全局规则：逐级快照存 .sumeru/write/history/{阶段}-{时间戳}/
+    history_dir = write_root / "history" / f"{HISTORY_PREFIX}{datetime.now().strftime('%Y%m%d-%H%M%S-%f')}"
 
     result = {"original": None, "history": None}
     original_target = original_dir / filename

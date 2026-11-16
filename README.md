@@ -67,6 +67,19 @@ npx skills add beijinguang/sumeru
 python3 -m unittest discover -s tests -v
 ```
 
+## 🖥️ 图形界面（可选）
+
+不想记指令？启动本地 Web 驾驶舱，图形化管理进度、章节、校验与导出：
+
+```bash
+cd <你的小说项目目录>
+python3 <sumeru仓库路径>/webui/server.py
+# → 浏览器打开 http://127.0.0.1:8765
+```
+
+功能：进度仪表盘与门禁状态灯、章节浏览/编辑（自动备份）、一键校验与报告查看、
+多平台导出下载、按项目状态生成下一步 AI 指令。详见 `webui/README.md`。
+
 ## 📖 快速开始
 
 ### 全流程创作（推荐）
