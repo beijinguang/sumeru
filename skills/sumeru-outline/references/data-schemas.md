@@ -6,13 +6,22 @@
 {
   "meta": {
     "totalChapters": 100,
+    "totalWords": 300000,
+    "targetWords": 300000,
+    "chapterWords": 3000,
+    "volumeCount": 5,
     "volumes": [
       {
         "volumeNumber": 1,
         "volumeName": "立足篇",
         "chapterStart": 1,
         "chapterEnd": 20,
-        "coreConflict": "新手村冲突与立足"
+        "chapterCount": 20,
+        "plannedWords": 60000,
+        "coreConflict": "新手村冲突与立足",
+        "upgradeNode": "主角觉醒金手指",
+        "turningPoint": "家族除名事件",
+        "volumeHook": "祖传物品浮现异象"
       }
     ],
     "generatedAt": "2026-04-05T10:00:00Z"
@@ -43,6 +52,8 @@
   ]
 }
 ```
+
+> 注意：`meta.targetWords` 必填——`plan-chapters.py --validate` 的字数预算检查依赖它，示例缺省会导致该检查被静默跳过。
 
 #### world.json 数据结构规范
 

@@ -219,11 +219,7 @@ flowchart LR
 4. `passed` 不为 `true` 时，**禁止进入 sumeru-write 阶段**，worldbuilder 在阶段检查点直接拦截
 
 #### 5. 合规自检 5 问（每轮必答）
-1. 每个名字能否说清造词来源？
-2. 是否存在「换姓不换名」？
-3. 势力/公司/赛事是否只是真实名称改一个字？
-4. 前三章专有名词是否都能在人名库/地名库中找到来源？
-5. 老读者会不会说「这不就是某某书」？
+完整 5 问与判定标准以 `references/ip-blocklist.md` 的「四、生成后自检（5 问）」为唯一权威，此处不重复展开；5 问全部通过，才能把 `compliance-check.json` 的 `passed` 置为 `true`。
 
 ### 产物与验收标准（Definition of Done）
 

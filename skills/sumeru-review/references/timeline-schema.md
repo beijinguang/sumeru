@@ -66,7 +66,7 @@
 | name | 是 | 人物名（仅内部使用，不进入用户报告时也建议保留） |
 | birthDate | 否 | ISO 日期，用于年龄验算 |
 | birthYear | 否 | 只有年份时使用，年龄验算容差 ±1 |
-| initialAge | 否 | 首次出场年龄，用于交叉验算 |
+| initialAge | 否 | 首次出场年龄，仅作记录参考（脚本暂未基于该字段验算；验算依赖 birthDate/birthYear） |
 
 ### events
 | 字段 | 必填 | 说明 |
