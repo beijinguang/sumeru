@@ -1,0 +1,28 @@
+CLAUDE.md
+  h_414dea22084ef6 11,106,251
+skills/sumeru-deconstruct/scripts/check-derivative.py
+  h_414dea22084ef6 8,55-62,64,68-69,79
+skills/sumeru-finalize/scripts/build.py
+  h_414dea22084ef6 69-74,77,81-82,92-94,488-492,514-517
+skills/sumeru-outline/SKILL.md
+  h_414dea22084ef6 152,235-236
+skills/sumeru-review/scripts/chapter-word-counter.py
+  h_414dea22084ef6 7-8,15,238-241,249-260,262-263,267,272-273,277
+skills/sumeru-worldbuilder/SKILL.md
+  h_414dea22084ef6 292-304
+skills/sumeru-write/scripts/check-chapters.py
+  h_414dea22084ef6 53-57,62-63,117-121
+tests/test_tools.py
+  h_414dea22084ef6 12,169-221,239-241,300-320,402-466
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "383be23dfbf8cceb1b34e65a0e2c886974bdefff",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
