@@ -108,7 +108,7 @@ def analyze_chapters(chapter_files: List[Path],
                 status = "warning"
 
             chapters_data.append({
-                "chapter_num": idx,
+                "chapter_num": int(re.match(r'\d+', file_path.name).group()) if re.match(r'\d+', file_path.name) else idx,
                 "file_name": file_path.name,
                 "file_path": str(file_path.absolute()),
                 "total_words": words,

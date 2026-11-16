@@ -1,13 +1,10 @@
 ---
 name: sumeru-topic
-description: 网文/小说选题策划，适用于用户说"想写小说不知道写什么"、"帮我想个小说题材"、"找网文创意"、"分析什么题材火"、"小说选题评估"、"现在什么网文题材好卖"、"给我几个小说创意"、"想个小说金手指"、"帮我找个热门题材"、"小说写什么题材容易火"、"网文市场趋势分析"、"帮我做小说选题"等需求，生成多套选题方案和市场分析，包含金手指设计、核心卖点、爽点模式和可行性评估
+description: 网文选题策划与市场分析。当用户不知道写什么、想找题材/创意/金手指、或要评估选题可行性与题材趋势时使用；输出3-5套选题方案及多维度评估（基于AI知识推理，非实时榜单数据）。不用于已确定选题后的大纲、人设或正文写作。
 type: skill
 ---
 
 ## 网文选题策划
-
-### 触发关键词
-想写小说不知道写什么、帮我想个小说题材、找网文创意、分析什么题材火、小说选题评估、现在什么网文题材好卖、给我几个小说创意、想个小说金手指、帮我找个热门题材、小说写什么题材容易火、网文市场趋势分析、帮我做小说选题、网文热门题材分析
 
 ### 核心功能
 1. **市场热点分析**：基于AI推理分析网文市场热点题材、流行趋势与受众偏好（注：市场分析基于AI对网文领域的知识推理，非实时数据，建议结合实际平台榜单交叉验证）
@@ -77,57 +74,7 @@ type: skill
 - `summary.json`：核心参数摘要，包含评分、推荐结论等
 
 #### options.json 数据结构规范
-
-```json
-{
-  "meta": {
-    "generatedAt": "2026-04-26T10:00:00Z",
-    "genre": "玄幻",
-    "keywords": ["废柴逆袭", "系统流", "穿越"],
-    "platform": "起点",
-    "audience": "男频"
-  },
-  "options": [
-    {
-      "id": 1,
-      "title": "书名",
-      "coreConcept": "一句话概括",
-      "goldenFinger": {
-        "name": "金手指名称",
-        "description": "金手指详细设定",
-        "rules": ["规则1", "规则2"],
-        "limitations": ["限制1", "限制2"],
-        "growthPath": "成长路径描述"
-      },
-      "coreSellingPoints": ["卖点1", "卖点2", "卖点3"],
-      "audience": "精准受众描述",
-      "coolPointPattern": {
-        "type": "打脸/升级/搞钱/恋爱/权谋",
-        "rhythm": "爽点节奏描述",
-        "emotionCurve": "情绪价值曲线描述"
-      },
-      "openingSuggestion": "前三章情节规划",
-      "scores": {
-        "marketHeat": 8,
-        "competition": 6,
-        "audienceSize": 9,
-        "creationDifficulty": 5,
-        "monetizationPotential": 8,
-        "policyRisk": "low",
-        "overallScore": 7.5
-      },
-      "risks": ["风险1", "风险2"],
-      "differentiationStrategy": "差异化竞争策略"
-    }
-  ],
-  "recommendedOptionId": 1,
-  "marketAnalysis": {
-    "trendingGenres": ["热门题材1", "热门题材2"],
-    "targetGenrePerformance": "目标题材市场表现描述",
-    "audienceProfile": "受众画像描述"
-  }
-}
-```
+字段定义与完整示例见 `references/options-schema.md`。写入 `options.json` 前必须先读取该文件并严格按其字段名输出，`sumeru-outline` 依赖这些字段。
 
 #### 与其他 Skill 配合
 此 skill 生成的 `options.json` 可以被 `sumeru-outline` skill 自动读取：

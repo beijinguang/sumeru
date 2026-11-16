@@ -2,3 +2,7 @@
 .sumeru/
 .claude/
 .omo/
+
+# Python
+__pycache__/
+*.pyc

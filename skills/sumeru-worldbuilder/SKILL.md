@@ -1,23 +1,21 @@
 ---
 name: sumeru-worldbuilder
-description: 网文/小说全流程创作世界构建师，适用于用户说"我想写小说"、"写一本网文"、"从零开始创作小说"、"帮我写本XX类型的小说"、"我要写本小说"、"给我整个小说创作流程"、"自动写小说"、"小说创作一站式服务"、"帮我完成一本小说"、"我只有创意怎么写小说"等整体小说写作需求，自动协调选题、大纲、写作、审查、润色全流程，即使你只有一个大概的创意也能帮你完成从0到1的完整作品，构建统一的故事世界，**所有章节级操作均使用子Agent并行处理，每个Agent最多负责3个章节**
+description: 网文/小说全流程创作编排。当用户想从零写一本小说、只有创意想要完整作品、或要求一站式/自动完成小说创作时使用；按卷循环协调选题→大纲→写作→审查→润色→完稿，并在关键节点请用户确认。不用于只做单一环节的请求（如只写一章、只润色、只导出），这类请求交给对应的 sumeru-* 专项 Skill。
 type: skill
 ---
 
 ## 网文创作世界构建师 (worldbuilder)
-
-### 触发关键词
-我想写小说、写一本网文、从零开始创作小说、帮我写本XX类型的小说、我要写本小说、给我整个小说创作流程、自动写小说、小说创作一站式服务、帮我完成一本小说、我只有创意怎么写小说、从零开始写网文、小说全流程创作
 
 ### 核心功能
 worldbuilder 是网文创作的一站式主控技能，负责统筹协调从创意萌芽到作品完稿的完整创作链路，构建完整统一的故事世界。通过智能编排各专项技能的调用顺序与参数传递，实现自动化、流水线式的网文创作体验：
 
 1. **选题策划**：调用 `sumeru-topic` 进行市场分析、选题定位，生成核心创意与卖点
 2. **大纲设计**：调用 `sumeru-outline` 构建完整世界观、人物设定、分卷大纲与**完整章节细纲**
-3. **内容创作**：调用 `sumeru-write` 按大纲进行分章节内容撰写，保持风格统一（**必须完成所有章节后才进入下一阶段**）
-4. **逻辑审查**：调用 `sumeru-review` 对**所有已完成章节**进行全面审查，校验时间线一致性、人物行为逻辑、前后剧情连贯性
-5. **内容润色**：调用 `sumeru-polish` 对**所有已审查章节**进行文笔优化、细节丰满、节奏调整
-6. **完稿校验**：调用 `sumeru-finalize` 对**所有已润色章节**完成错别字检查、标点规范、逻辑漏洞最终排查与作品打包
+3. **内容创作**：调用 `sumeru-write` 按大纲进行分章节内容撰写，保持风格统一（**按卷推进，本卷章节全部完成后才进入本卷审查**）
+4. **逻辑审查**：调用 `sumeru-review` 对**本卷已完成章节**进行全面审查（同时核对与前面各卷的一致性），校验时间线一致性、人物行为逻辑、前后剧情连贯性
+5. **内容润色**：调用 `sumeru-polish` 对**本卷已审查章节**进行文笔优化、细节丰满、节奏调整
+6. **完稿校验**：调用 `sumeru-finalize` 在全部分卷完成后，对**所有已润色章节**完成错别字检查、标点规范、逻辑漏洞最终排查与作品打包
+**编排方式**：第1-2步只做一次；第3-5步以「卷」为单位循环执行（写完一卷 → 审查该卷 → 润色该卷 → 下一卷）；第6步在全部分卷完成后执行。关键节点设有用户确认点，详见「Skill 协调流程」。
 
 ### ⚠️ 全局约束：子Agent并行处理规则
 
@@ -41,7 +39,7 @@ worldbuilder 在协调所有涉及章节级操作的子技能时，强制执行 
 
 ### Skill 协调流程
 
-worldbuilder 负责以下数据流转和协调工作：
+worldbuilder 采用**按卷循环**编排：选题和大纲只做一次，之后以「卷」为单位依次执行 写作 → 审查 → 润色，全部分卷完成后统一完稿。问题在一卷之内就被发现和修复，不会等全书写完才返工。
 
 ```
 用户需求
@@ -51,52 +49,65 @@ worldbuilder 负责以下数据流转和协调工作：
 [sumeru-topic] 选题策划
     → 输出: 选题策划报告.md, .sumeru/topic/options.json
     ↓
-[sumeru-outline] 大纲设计（**生成完整章节细纲**）
+【确认点 A】用户选定选题方案
+    ↓
+[sumeru-outline] 大纲设计（生成完整章节细纲，含分卷信息）
     → 输入: .sumeru/topic/options.json (可选)
     → 输出: 小说大纲_*.md, .sumeru/outline/*.json（含 chapter-outlines.json）
     ↓
-[阶段检查点 1] 检查大纲完整性，确认章节细纲已生成
+【确认点 B】用户确认世界观、人设、分卷大纲与章节细纲
     ↓
-[sumeru-write] 章节撰写（**细纲驱动，并行批量生成，每个Agent最多3章**）
-    → 输入: .sumeru/outline/chapter-outlines.json
-    → 输出: chapters/*.md, .sumeru/write/*.json
-    → ✅ **必须完成所有章节**（检查章节数与细纲一致）
-    → ⚠️ **遵循全局3章/Agent约束**
+[sumeru-write] 试写第1-3章（黄金前三章）
     ↓
-[阶段检查点 2] 验证所有章节已完成，记录写入进度
+【确认点 C】用户确认文风、节奏与人设呈现；不满意则调整风格参数或细纲后重写
     ↓
-[sumeru-review] 逻辑审查（**审查所有章节，自动修订大纲+重写严重问题章节，每个Agent最多3章**）
-    → 输入: .sumeru/outline/*.json, chapters/*.md
-    → 输出: 剧情审查报告.md, .sumeru/review/*.json（含 outline-revisions.json, bottom-line-checklist.json）
-    → ✅ **必须完成全本审查+底线问题零遗漏核验**
-    → 🔧 **严重问题自动修订大纲并重写章节，不再只生成 fix-plan.json 等待外部调用**
-    → ⚠️ **遵循全局3章/Agent约束**
+┌─ 对每一卷循环（按 chapter-outlines.json 的 meta.volumes 顺序）
+│
+│  [sumeru-write] 写完本卷全部章节（波次并行，每个Agent最多3章）
+│      → 输出: chapters/*.md, .sumeru/write/*
+│      → 校验: 运行 validate-chapters.py，确认本卷章节齐全、命名合规
+│      ↓
+│  [sumeru-review] 审查本卷章节，并核对与前面各卷的一致性
+│      → 输出: 剧情审查报告.md, .sumeru/review/*
+│      → 轻量修复自动执行；「修复 → 验证」最多2轮
+│      → 需要修订细纲并重写章节时，先进入【确认点 D】
+│      ↓
+│  [sumeru-polish] 润色本卷章节（含润色后自检）
+│      → 输出: chapters/*.md（直接修改，自动备份）, .sumeru/polish/*
+│      ↓
+│  【确认点 E】卷末汇报：本卷字数、已修复问题、需人工干预清单；确认后进入下一卷
+│
+└─ 全部分卷完成
     ↓
-[阶段检查点 3] 验证审查完成，确认底线问题已全部解决或标记「需人工干预」
-    ↓
-[review 已自动完成大纲修订+章节重写+轻量修复，直接修改了 chapters/（自动备份到 .sumeru/write/original/）]
-    ↓
-[sumeru-polish] 内容润色（**润色所有章节，每个Agent最多3章**）
-    → 输入: chapters/*.md, .sumeru/review/*.json
-    → 输出: chapters/*.md（润色后直接修改，自动备份到 .sumeru/write/original/）, .sumeru/polish/*.json
-    → ✅ **必须完成全本润色**
-    → 📝 **润色结果直接修改 chapters/，修改前自动备份到 .sumeru/write/original/**
-    → ⚠️ **遵循全局3章/Agent约束**
-    ↓
-[阶段检查点 4] 验证润色完成
-    ↓
-[sumeru-finalize] 完稿校验（**处理所有章节，每个Agent最多3章**）
-    → 输入: chapters/*.md（已包含review修复和polish润色后的内容）
+[sumeru-finalize] 全书完稿校验与多平台导出
+    → 输入: chapters/*.md（已包含各卷 review 修复和 polish 润色后的内容）
     → 输出: publish/*, .sumeru/finalize/*
-    → ⚠️ **遵循全局3章/Agent约束**
 ```
 
+所有章节级操作均遵循全局3章/Agent约束、并发上限与写入隔离规则（详见 AGENTS.md）。
+
+#### 确认点与全自动模式
+
+| 确认点 | 时机 | 需要用户确认的内容 |
+|--------|------|--------------------|
+| A | 选题完成后 | 选定哪一套选题方案 |
+| B | 大纲完成后 | 世界观、人设、分卷大纲、章节细纲 |
+| C | 前三章试写后 | 文风、节奏、人设呈现是否符合预期 |
+| D | review 要修订细纲并重写章节前 | 修订原因、受影响章节、修订前后对比 |
+| E | 每卷结束后 | 本卷成果与遗留问题，是否进入下一卷 |
+
+- 确认只发生在以上节点。轻量修复、润色结果应用、备份等步骤不需要确认（见 AGENTS.md 自动备份规则）
+- **全自动模式**：用户明确说「全自动」「无需确认」「不要问我」时，跳过确认点 C、D、E（信息已充足时 A、B 也可跳过，默认采用推荐方案）。所有本应确认的内容必须写入卷末报告，并记录到 `WORLDBUILDER_PROGRESS.json` 的 `pending_review` 列表，供事后查阅
+- **短篇或未分卷作品**：把全书视为一卷，循环只执行一次
+- **单卷章节过多**（超过50章）：按每30-50章拆成若干「段」，在剧情弧结束处断开，以段为单位执行同样的循环
+- **跳过阶段**：用户指定跳过审查或润色时，循环中省略对应步骤，其余不变
+
 #### 关键阶段检查点说明
-每个阶段完成后都会自动更新 `.sumeru/session/WORLDBUILDER_PROGRESS.json`，任务重启时从上次未完成的阶段继续：
-- **大纲阶段**：确认 `chapter-outlines.json` 生成且包含完整章节列表
-- **创作阶段**：检查 `chapters/` 目录下已生成章节数与细纲一致
-- **审查阶段**：确认 `剧情审查报告.md` 生成且包含全本审查结果。review 已自动完成大纲修订、章节重写和轻量修复（直接修改了 `chapters/`，修改前已自动备份到 `.sumeru/write/original/`）。确认 `bottom-line-checklist.json` 中所有底线问题已标记为「已解决」或「需人工干预」
-- **润色阶段**：确认润色已直接修改 `chapters/` 中的文件。润色修改前已自动备份到 `.sumeru/write/original/`
+每个阶段、每一卷完成后都更新 `.sumeru/session/WORLDBUILDER_PROGRESS.json`，任务重启时从上次未完成的卷和阶段继续：
+- **大纲阶段**：确认 `chapter-outlines.json` 生成且包含完整章节列表与分卷信息（`meta.volumes`）
+- **每卷写作**：运行 `skills/sumeru-write/scripts/validate-chapters.py`，确认本卷章节与细纲一致、命名合规
+- **每卷审查**：确认 `剧情审查报告.md` 已包含本卷结果；`bottom-line-checklist.json` 中本卷相关底线问题已标记为「已解决」或「需人工干预」。review 的修复直接修改 `chapters/`（修改前已自动备份）
+- **每卷润色**：确认润色已直接修改 `chapters/` 中的文件且润色后自检通过
 - **完稿阶段**：确认 `publish/` 目录下各平台格式导出完成
 
 ### 数据共享机制
@@ -113,56 +124,43 @@ worldbuilder 负责以下数据流转和协调工作：
 
 ### 执行流程
 ```mermaid
-flowchart LR
-    A[接收创作需求] --> B[参数校验与初始化]
-    B --> C[调用 topic 选题策划]
-    C --> D[调用 outline 大纲设计]
-    D --> E[调用 write 完整章节撰写]
-    E -->|✅ 全部章节完成| F[调用 review 全本逻辑审查]
-    F --> F1{review 发现严重问题?}
-    F1 -->|是| F2[review 自动修订大纲+重写章节]
-    F2 --> F3[直接修改 chapters/，自动备份到 .sumeru/write/original/]
-    F3 --> G[调用 polish 全本内容润色]
+flowchart TD
+    A[接收创作需求] --> B[需求收集与初始化]
+    B --> C[topic 选题策划]
+    C --> CA{确认点A 选定选题}
+    CA --> D[outline 大纲与章节细纲]
+    D --> DB{确认点B 确认大纲}
+    DB --> T[write 试写前三章]
+    T --> TC{确认点C 确认文风}
+    TC -->|调整| T
+    TC -->|通过| V[取下一卷]
+    V --> E[write 写完本卷]
+    E --> F[review 审查本卷]
+    F --> F1{需修订细纲并重写?}
+    F1 -->|是| FD{确认点D 确认修订方案}
+    FD --> F2[修订细纲 重写章节 级联检查]
+    F2 --> G[polish 润色本卷]
     F1 -->|否| G
-    G --> K{润色确认?}
-    K -->|否| L[针对性调整润色]
-    L --> G
-    K -->|是| M[调用 finalize 完稿校验]
-    M --> N[生成创作报告与作品文件]
-    
-    subgraph 进度保存
-        O[WORLDBUILDER_PROGRESS.json]
-        E -->|保存进度| O
-        F -->|保存进度| O
-        G -->|保存进度| O
-        M -->|保存进度| O
-    end
+    G --> GE{确认点E 卷末确认}
+    GE -->|还有下一卷| V
+    GE -->|全部完成| M[finalize 完稿校验与导出]
+    M --> N[生成创作报告]
 ```
 
 **详细流程说明**：
-1. **初始化阶段**：验证输入参数有效性，创建工作目录，初始化创作状态，创建 `.sumeru/session/WORLDBUILDER_PROGRESS.json` 进度文件
-2. **需求收集阶段**：智能判断用户提供的信息是否充足，如信息不足则自动触发交互式提问引导用户补充需求，确认所有需求后进入下一阶段
-3. **选题阶段**：基于收集到的完整需求生成3-5个精准匹配的选题方案供选择，确定后进入大纲设计，完成后更新进度文件
-4. **大纲阶段**：先输出世界观与人设，确认后生成完整大纲和**所有章节细纲**，完成后更新进度文件
-5. **创作阶段**：按细纲驱动批量创作所有章节，支持并行生成（按波次推进并传递章节衔接上下文，同时运行的子Agent不超过并发上限），**必须完成所有章节**后才进入下一阶段（遵循全局3章/Agent约束），完成后更新进度文件
-6. **审查阶段**：调用 `sumeru-review` 执行三阶段审查修复流程（遵循全局3章/Agent约束）：
-    - **第一阶段：全局审查**：分析整体剧情脉络、时间线、设定一致性、冲突点分布、伏笔回收状态，**执行底线问题扫描**生成 `bottom-line-checklist.json`
-    - **第二阶段：章节细节审查**：逐章检查字数、时间线、人物OOC、物品状态、场景质量、伏笔设置
-    - **第三阶段：统一修复**：
-      - 合并全局和章节问题，按严重程度制定修复计划
-      - 执行**轻量修复**（文字修正、段落调整、字数填充等），直接修改 `chapters/` 文件（自动备份到 `.sumeru/write/original/`）
-      - 对**严重问题自动闭环修复**：修订 `.sumeru/outline/chapter-outlines.json` 中受影响章节的细纲，然后基于修订后的细纲使用子Agent并行重写对应章节，直接修改 `chapters/`（自动备份到 `.sumeru/write/original/`），修订记录保存到 `outline-revisions.json`
-      - 执行**底线问题零遗漏核验**：六类底线问题（时间线矛盾、设定崩坏、人物OOC、重复情节、信息泄露、伏笔死结）必须全部解决或标记「需人工干预」
-    - **字数检查与填充**：在第二阶段逐章统计字数，对不足的章节自动填充内容（强化场景描写、丰富对话、补充心理活动等）
-    - **自动修复所有问题**：不只是提出问题，而是自动修复所有问题（轻量修复+大纲修订+章节重写）
-    - review 自动完成大纲修订和章节重写，不再需要 worldbuilder 额外调用 sumeru-write 进行重写
-    - 修复完成后重新验证，确保所有问题已解决（「修复 → 重新验证」最多2轮，仍未解决的标记「需人工干预」）
-    - 完成后更新进度文件
-7. **润色阶段**：调用 `sumeru-polish` 进行全本内容润色（遵循全局3章/Agent约束），提供多种润色风格选项（精简/详写/抒情/热血等）
-    - 润色完成后，直接修改 `chapters/` 中的文件（修改前自动备份到 `.sumeru/write/original/`）
-    - 润色过程和结果记录到 `.sumeru/polish/` 目录
-    - 完成后更新进度文件
-8. **完稿阶段**：调用 `sumeru-finalize` 对所有润色后的章节进行完稿校验（遵循全局3章/Agent约束），从 `chapters/` 目录读取最终内容（已包含review修复和polish润色后的结果），输出多种格式（Markdown/HTML/EPUB）到 `publish/` 目录，生成创作总结报告，完成后更新进度文件为最终完成状态
+1. **初始化阶段**：验证输入参数有效性，创建工作目录，创建 `.sumeru/session/WORLDBUILDER_PROGRESS.json` 进度文件
+2. **需求收集阶段**：判断用户提供的信息是否充足，不足时触发交互式提问补充需求，结果保存到 `.sumeru/session/requirements.json`
+3. **选题阶段**：生成3-5个选题方案，用户选定（确认点 A）后进入大纲设计
+4. **大纲阶段**：先输出世界观与人设，再生成完整大纲和**所有章节细纲**（含分卷信息），用户确认（确认点 B）后进入写作
+5. **试写阶段**：先写第1-3章，用户确认文风、节奏与人设呈现（确认点 C）。前三章决定读者留存，也决定后续全部章节的风格基准，必须先定下来再批量生成
+6. **分卷循环**：对每一卷依次执行
+    - **写作**：调用 `sumeru-write` 写完本卷全部章节，按波次并行并传递章节衔接上下文；完成后运行 `validate-chapters.py` 校验
+    - **审查**：调用 `sumeru-review` 审查本卷。全局审查基于「大纲 + 细纲 + 已完成各卷的章节概要」，章节细节审查只针对本卷。轻量修复自动执行；需要修订细纲并重写章节时先经用户确认（确认点 D），重写后做级联影响检查；「修复 → 验证」最多2轮，仍未解决的标记「需人工干预」
+    - **润色**：调用 `sumeru-polish` 润色本卷，子Agent保存前执行润色后自检
+    - **卷末确认**：汇报本卷字数、已修复问题与需人工干预清单（确认点 E），更新进度文件后进入下一卷
+7. **完稿阶段**：全部分卷完成后调用 `sumeru-finalize`，从 `chapters/` 读取最终内容，执行技术性校验与敏感内容检测，用脚本导出各平台格式到 `publish/`，生成创作总结报告，并把进度文件更新为最终完成状态
+
+worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自身完成（见 AGENTS.md「Skill间解耦规则」）。
 
 ### 交互式需求引导
 当用户提供的信息过于简略时（仅输入题材和少量关键词），系统会自动触发交互式提问，一步步引导用户明确创作需求，确保生成内容完全符合预期。
@@ -296,58 +294,17 @@ flowchart LR
 - **错误报告**：生成详细的错误日志文件，位于 `{output-dir}/error.log`
 
 ### 进阶使用场景
+团队协作、多版本对比、系列作品、A/B测试、批量生成素材库等用法示例见 `references/advanced-scenarios.md`，需要时再读取。
 
-#### 场景1：团队协作创作
-```
-# 策划完成选题和大纲后，交由写手继续
-/sumeru-worldbuilder 玄幻 "废柴逆袭+系统流" 跳过写作、审查、润色、完稿阶段
-
-# 写手接手，从创作阶段继续
-/sumeru-worldbuilder 玄幻 "废柴逆袭+系统流" 跳过选题、大纲阶段 恢复上次创作
-```
-
-#### 场景2：多版本对比创作
-```
-# 生成多个版本进行对比
-/sumeru-worldbuilder 言情 "穿越+宫斗" 标题"清宫·甄嬛传" 文艺风格
-/sumeru-worldbuilder 言情 "穿越+宫斗" 标题"清宫·步步惊心" 快节奏
-```
-
-#### 场景3：定制化系列作品
-```
-# 第一部
-/sumeru-worldbuilder 玄幻 "系统+升级" 标题"武帝降临" 中篇
-
-# 第二部（沿用世界观）
-/sumeru-worldbuilder 玄幻 "系统+升级" 跳过选题、大纲阶段 恢复上次创作 标题"武帝降临2"
-```
-
-#### 场景4：A/B测试优化
-```
-# 测试不同开篇风格
-/sumeru-worldbuilder 都市 "重生+商战" 跳过写作、审查、润色、完稿阶段
-# 手动修改大纲中的开篇设定后继续
-/sumeru-worldbuilder 都市 "重生+商战" 跳过选题阶段 恢复上次创作
-```
-
-#### 场景5：批量生成素材库
-```
-# 生成多个选题方案用于后续选择
-/sumeru-worldbuilder 玄幻 "废柴" 跳过大纲、写作、审查、润色、完稿阶段
-/sumeru-worldbuilder 玄幻 "系统" 跳过大纲、写作、审查、润色、完稿阶段
-/sumeru-worldbuilder 玄幻 "重生" 跳过大纲、写作、审查、润色、完稿阶段
-```
-
-#### 数据持久化规范
+### 数据持久化规范
 所有中间状态数据统一存储在当前工作目录的 `.sumeru/` 目录下，避免上下文压缩或清理导致数据丢失：
 
 #### 全局存储结构
 ```
 .sumeru/
 ├── session/          # 会话全局数据
-│   ├── config.json   # 创作配置参数
-│   ├── status.json   # 当前进度状态
-│   ├── WORLDBUILDER_PROGRESS.json # 全流程阶段进度追踪（断点恢复依据）
+│   ├── requirements.json # 创作需求与配置参数（用户回答、风格、篇幅等）
+│   ├── WORLDBUILDER_PROGRESS.json # 全流程进度追踪（唯一进度来源，断点恢复依据）
 │   └── history.log   # 操作历史记录
 ├── topic/            # 选题阶段输出
 │   ├── report.md     # 完整选题策划报告
@@ -377,85 +334,16 @@ flowchart LR
 │   └── style-config.json # 润色风格配置
 └── finalize/         # 完稿阶段输出
     ├── clean/        # 纯净版全文
-    ├── platforms/    # 各平台导出版本
-    └── report.md     # 完稿校验报告
+    ├── error-report.json # 错误与敏感内容清单
+    ├── sensitive-hits.json # 敏感词词表命中记录
+    └── stats.json    # 完稿统计（各平台导出文件在 publish/）
 ```
 
-#### 进度保存机制（WORLDBUILDER_PROGRESS.json，位于 .sumeru/session/）
-
-```json
-{
-  "session_id": "session-20240315-abc123",
-  "created_at": "2024-03-15T10:00:00",
-  "updated_at": "2024-03-15T14:30:00",
-  "current_stage": "review",
-  "stages": {
-    "topic": {
-      "status": "completed",
-      "completed_at": "2024-03-15T10:15:00",
-      "output_files": [
-        "选题策划报告.md",
-        ".sumeru/topic/options.json"
-      ]
-    },
-    "outline": {
-      "status": "completed", 
-      "completed_at": "2024-03-15T11:20:00",
-      "output_files": [
-        "小说大纲_玄幻系统流.md",
-        ".sumeru/outline/chapter-outlines.json"
-      ]
-    },
-    "write": {
-      "status": "completed",
-      "completed_at": "2024-03-15T13:45:00",
-      "output_files": [
-        "chapters/001-废物觉醒系统.md",
-        "chapters/002-系统签到奖励.md",
-        ".sumeru/write/progress.json"
-      ],
-      "statistics": {
-        "total_chapters": 100,
-        "completed_chapters": 100,
-        "total_words": 520000
-      }
-    },
-    "review": {
-      "status": "completed",
-      "completed_at": "2024-03-15T14:45:00",
-      "output_files": [
-        "剧情审查报告.md",
-        ".sumeru/review/issues.json",
-        ".sumeru/review/fix-plan.json",
-        ".sumeru/review/outline-revisions.json",
-        ".sumeru/review/bottom-line-checklist.json"
-      ],
-      "statistics": {
-        "total_issues_found": 8,
-        "critical_issues": 2,
-        "issues_fixed_lightweight": 4,
-        "issues_fixed_rewrite": 2,
-        "outline_revisions": 1,
-        "bottom_line_resolved": 2,
-        "bottom_line_manual": 0
-      },
-      "outline_revised": true,
-      "chapters_rewritten": true,
-      "bottom_line_all_resolved": true
-    },
-    "polish": {
-      "status": "in_progress",
-      "started_at": "2024-03-15T15:00:00",
-      "progress": "60%",
-      "polish_level": "moderate",
-      "style": "小白爽文"
-    },
-    "finalize": {
-      "status": "pending"
-    }
-  }
-}
-```
+#### 进度保存机制
+`.sumeru/session/WORLDBUILDER_PROGRESS.json` 是全流程**唯一**的进度来源，每个阶段、每一卷完成后更新。完整字段与示例见 `references/progress-schema.md`，读写进度文件前先读取该文件。要点：
+- `stages`：topic / outline / write / review / polish / finalize 各阶段的总体状态与输出文件
+- `volumes`：按卷记录 write / review / polish 的状态，断点恢复时据此定位到具体的卷和步骤
+- `pending_review`：全自动模式下被跳过的确认项，供用户事后查阅
 
 #### 数据生命周期管理
 1. **自动保存**：每完成一个阶段自动将数据写入对应目录，支持幂等写入

@@ -1,13 +1,10 @@
 ---
 name: sumeru-outline
-description: 小说大纲/世界观/人设设计，适用于用户说"帮我写个小说大纲"、"设计主角人设"、"做世界观设定"、"搭小说剧情框架"、"写分卷细纲"、"给我设计小说人物"、"做个玄幻世界观"、"帮我梳理小说剧情"、"小说人物设定"、"写小说分章大纲"、"爽点排布规划"、"做小说人设卡"、"构建小说世界"等需求，生成完整的世界观、人物卡、剧情大纲、爽点规划，自动合规检查避免侵权风险，**大批量章节细纲生成时使用子Agent并行处理，每个Agent最多负责3个章节的细纲**
+description: 小说大纲、世界观、人设与章节细纲设计。当用户要写大纲、设计人物/世界观/力量体系、规划分卷与爽点、或生成全本章节细纲时使用；所有人名地名强制虚构并做合规检查。不用于撰写章节正文（用 sumeru-write）或审查已写内容（用 sumeru-review）。
 type: skill
 ---
 
 ## 网文大纲设计
-
-### 触发关键词
-帮我写个小说大纲、设计主角人设、做世界观设定、搭小说剧情框架、写分卷细纲、给我设计小说人物、做个玄幻世界观、帮我梳理小说剧情、小说人物设定、写小说分章大纲、爽点排布规划、做小说人设卡、构建小说世界、小说大纲生成、写完整章节细纲、生成全本细纲、所有章节细纲
 
 ### 核心功能
 1. 世界观设定：世界背景、力量体系、社会规则、地理设定
@@ -200,149 +197,10 @@ flowchart LR
 - `world.md`：世界观设定备份
 - `plot.md`：剧情大纲备份
 
-#### chapter-outlines.json 数据结构规范
-
-```json
-{
-  "meta": {
-    "totalChapters": 100,
-    "volumes": [
-      {
-        "volumeNumber": 1,
-        "volumeName": "立足篇",
-        "chapterStart": 1,
-        "chapterEnd": 20,
-        "coreConflict": "新手村冲突与立足"
-      }
-    ],
-    "generatedAt": "2026-04-05T10:00:00Z"
-  },
-  "chapters": [
-    {
-      "chapterNumber": 1,
-      "chapterTitle": "废柴少爷",
-      "suggestedWords": "3000-4000",
-      "coreEvent": "主角在家族中被轻视，觉醒金手指",
-      "characters": ["主角", "反派少爷", "管家"],
-      "plotProgression": [
-        "开篇展示主角废柴处境",
-        "反派上门挑衅",
-        "主角意外觉醒金手指",
-        "初步展现实力，震惊众人",
-        "结尾埋下离开家族的伏笔"
-      ],
-      "coolPoint": "觉醒金手指的瞬间，初步打脸挑衅者",
-      "suspense": "金手指的真正功能是什么？",
-      "foreshadowing": "提到家族的神秘祖传物品",
-      "connection": "承接：开篇；引出：下章测试金手指",
-      "location": "家族演武场",
-      "pov": "主角视角",
-      "mood": "压抑→震惊→期待",
-      "volumeNumber": 1
-    }
-  ]
-}
-```
-
-#### world.json 数据结构规范
-
-```json
-{
-  "meta": {
-    "generatedAt": "2026-04-26T10:00:00Z",
-    "genre": "玄幻",
-    "style": "详细"
-  },
-  "background": {
-    "era": "时代背景（古代/现代/未来/玄幻）",
-    "history": ["关键历史事件1", "关键历史事件2"],
-    "coreRules": "世界本质/底层逻辑"
-  },
-  "powerSystem": {
-    "levels": ["等级1", "等级2", "等级3"],
-    "acquisition": "力量获取方式",
-    "balance": "力量平衡/克制关系"
-  },
-  "society": {
-    "politics": "政治结构",
-    "economy": "经济体系",
-    "classes": ["社会阶层1", "社会阶层2"],
-    "culture": ["文化习俗1", "文化习俗2"],
-    "taboos": ["禁忌规则1", "禁忌规则2"]
-  },
-  "geography": {
-    "overview": "世界地图概览",
-    "locations": [
-      {
-        "name": "虚构地名",
-        "type": "主城/秘境/险地",
-        "description": "地点描述",
-        "factions": ["关联势力"]
-      }
-    ]
-  }
-}
-```
-
-#### characters.json 数据结构规范
-
-```json
-{
-  "meta": {
-    "generatedAt": "2026-04-26T10:00:00Z",
-    "totalCharacters": 8
-  },
-  "protagonist": {
-    "name": "主角姓名（虚构）",
-    "age": "年龄",
-    "appearance": "外貌描述",
-    "identity": "身份",
-    "personality": {
-      "core": ["核心性格1", "核心性格2"],
-      "strengths": ["优点1", "优点2"],
-      "weaknesses": ["缺点1", "缺点2"],
-      "catchphrase": "口头禅"
-    },
-    "background": "过往经历",
-    "trauma": "创伤/执念",
-    "goals": {
-      "shortTerm": "短期目标",
-      "midTerm": "中期目标",
-      "longTerm": "长期目标"
-    },
-    "growthArc": "从XX到XX的转变",
-    "goldenFinger": {
-      "name": "金手指名称",
-      "source": "来源",
-      "description": "描述",
-      "limitations": ["限制1", "限制2"],
-      "growthSpace": "成长空间"
-    },
-    "tags": ["标签1", "标签2", "标签3"]
-  },
-  "supportingCharacters": [
-    {
-      "name": "配角姓名（虚构）",
-      "relationship": "与主角关系",
-      "function": "导师/伙伴/对手/红颜",
-      "personality": "性格描述",
-      "goal": "个人目标",
-      "growthLine": "成长线",
-      "interactionMode": "与主角互动模式"
-    }
-  ],
-  "antagonists": [
-    {
-      "name": "反派姓名（虚构）",
-      "personality": "性格描述",
-      "motivation": "反派动机",
-      "power": "实力层次",
-      "conflict": "与主角核心冲突",
-      "charm": "反派魅力点"
-    }
-  ]
-}
-```
+#### 数据结构规范
+`chapter-outlines.json`、`world.json`、`characters.json` 的字段定义与完整示例见 `references/data-schemas.md`。生成这三个文件前必须先读取该文件并严格按其字段名输出，下游 Skill 依赖这些字段：
+- `chapter-outlines.json` 的 `meta.volumes`（每卷的起止章节）是 worldbuilder 按卷循环的依据，必须填写；未分卷的短篇也要给出一个覆盖全书的卷
+- 每章的 `connection` 字段（承接/引出）是并行写作时保证章节衔接的依据，必须写清
 
 #### 与其他 Skill 配合
 - **前置 Skill**：可读取 `sumeru-topic` 的 `options.json`（通过自然语言指定"复用已有选题数据"）

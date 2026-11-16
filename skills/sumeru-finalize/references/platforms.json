@@ -1,0 +1,84 @@
+{
+  "platforms": {
+    "qidian": {
+      "name": "起点中文网",
+      "aliases": [
+        "起点",
+        "起点平台"
+      ],
+      "title_template": "第{n}章 {title}",
+      "indent": "　　",
+      "blank_line_between_paragraphs": true,
+      "keep_bold": false,
+      "scene_break": "* * *",
+      "recommended_words": [
+        3000,
+        5000
+      ]
+    },
+    "fanqie": {
+      "name": "番茄小说",
+      "aliases": [
+        "番茄",
+        "番茄平台"
+      ],
+      "title_template": "第{n}章 {title}",
+      "indent": "",
+      "blank_line_between_paragraphs": true,
+      "keep_bold": true,
+      "scene_break": "* * *",
+      "recommended_words": [
+        2000,
+        3000
+      ]
+    },
+    "jjwxc": {
+      "name": "晋江文学城",
+      "aliases": [
+        "晋江",
+        "晋江平台"
+      ],
+      "title_template": "第{n}章 {title}",
+      "indent": "　　",
+      "blank_line_between_paragraphs": false,
+      "keep_bold": false,
+      "scene_break": "* * *",
+      "recommended_words": [
+        2500,
+        4000
+      ]
+    },
+    "zongheng": {
+      "name": "纵横中文网",
+      "aliases": [
+        "纵横",
+        "纵横平台"
+      ],
+      "title_template": "第{n}章 {title}",
+      "indent": "　　",
+      "blank_line_between_paragraphs": false,
+      "keep_bold": false,
+      "scene_break": "* * *",
+      "recommended_words": [
+        3000,
+        6000
+      ]
+    },
+    "17k": {
+      "name": "17K小说网",
+      "aliases": [
+        "17K",
+        "17k小说网"
+      ],
+      "title_template": "第{n}章 {title}",
+      "indent": "　　",
+      "blank_line_between_paragraphs": false,
+      "keep_bold": false,
+      "scene_break": "* * *",
+      "recommended_words": [
+        2000,
+        4000
+      ]
+    }
+  }
+}

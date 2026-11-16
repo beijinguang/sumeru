@@ -3,10 +3,12 @@
 ## 项目概述
 本仓库是基于Claude Code Skill体系开发的网文创作全流程专项Skill集合，提供从选题策划到完稿导出的一站式网文创作能力。通过模块化的Skill架构，覆盖网文创作的所有核心环节，支持从创意萌芽到发布准备的完整工作流。
 
+本项目是在 [xindoo/sumeru](https://github.com/xindoo/sumeru)（MIT License）基础上的二次开发版本，仓库为 `beijinguang/sumeru`。
+
 ## 技术栈
 - Skill框架：Claude Code Skill系统（兼容OpenCode superpowers体系）
 - 运行环境：macOS / Linux zsh
-- 依赖环境：Python 3.11+、Node.js 20.x（部分工具脚本依赖）
+- 依赖环境：Python 3.9+（工具脚本依赖，仅使用标准库）
 - 当前版本：v0.1.0
 
 ## 核心架构结构
@@ -77,7 +79,7 @@ skills/
 ### 1. sumeru-worldbuilder 世界构建师Skill
 **定位**：全流程创作协调器/故事世界统筹者，适用于"从零开始写小说"、"帮我写本XX类型的网文"等整体创作需求
 **核心能力**：
-- 智能编排选题→大纲→写作→审查→润色→完稿全流程，构建完整统一的故事世界
+- 智能编排选题→大纲→写作→审查→润色→完稿全流程，构建完整统一的故事世界；写作/审查/润色**按卷循环**推进，关键节点设用户确认点，支持「全自动」模式
 - 交互式需求引导，完善创作参数，确保产出符合预期
 - 断点续传支持，创作中断后可恢复进度
 - 多版本对比、团队协作、系列作品创作等进阶场景支持
@@ -181,8 +183,9 @@ skills/
    - `SKILL.md` Skill定义文件，包含完整元数据（name、description、type: skill）
    - `scripts/`目录（按需创建）：存放执行逻辑脚本
    - `references/`目录（按需创建）：存放领域知识与模板
-3. Skill描述中必须包含触发关键词与排除规则，确保被正确识别调用
-4. 命令参数采用自然语言描述，避免命令行风格（如 `--param`），保持用户友好
+3. Skill 的 description 用一两句话写清「做什么 + 何时使用 + 不适用场景（排除规则）」，不堆砌触发语句和加粗标记；正文不再单列触发关键词（正文只在触发后才加载）
+4. `SKILL.md` 只保留流程与规则；数据结构、平台规则、长示例等大块内容放入 `references/`，在正文中注明何时读取
+5. 命令参数采用自然语言描述，避免命令行风格（如 `--param`），保持用户友好
 
 ## 边界与权限说明
 ### ✅ 可直接执行
@@ -217,10 +220,20 @@ skills/
    - **衔接上下文**：写作类操作存在前后依赖，必须按波次顺序推进，并把上一波次的章末摘要与人物状态传给下一波次（详见 `sumeru-write`）
    - **Skill内引用方式**：各Skill中使用"⚠️ 遵循全局约束：每个子Agent最多负责3个章节（详见 AGENTS.md '子Agent并行处理规则'）"格式引用，不再完整重述
 6. **自动备份规则（全局强制约束）**：review修复和polish润色直接修改 `chapters/` 目录中的文件，修改前自动备份原始章节到 `.sumeru/write/original/`，确保可回滚。无需用户手动确认应用步骤。**备份不得覆盖**：`original/` 只保存每章的最初原稿（已存在同名文件时不再覆盖）；每次修改前的版本另存到 `.sumeru/write/history/{阶段}-{时间戳}/`，确保 review 与 polish 的多轮修改都可逐级回滚。
-7. **Skill间解耦规则**：禁止下游Skill直接调用上游Skill（如review不得调用sumeru-write）。review发现严重问题时，由自身使用子Agent（遵循3章/Agent约束）自动修订大纲并重写对应章节，修复结果直接修改 chapters/（自动备份到 .sumeru/write/original/），全部修复操作记录到 fix-plan.json，供worldbuilder编排确认和用户查阅。
+7. **Skill间解耦规则**：禁止下游Skill直接调用上游Skill（如review不得调用sumeru-write）。review发现严重问题时，由自身使用子Agent（遵循3章/Agent约束）自动修订大纲并重写对应章节（修订细纲并重写前需经用户确认，全自动模式除外），修复结果直接修改 chapters/（自动备份到 .sumeru/write/original/），全部修复操作记录到 fix-plan.json，供worldbuilder编排确认和用户查阅。
+8. **按卷循环与确认点**：全流程编排时，写作 → 审查 → 润色以「卷」为单位循环推进，不等全书写完再统一审查。确认点只设在五处：选题选定、大纲确认、前三章试写、修订细纲并重写章节前、每卷结束。用户指定「全自动/无需确认」时跳过确认，但必须把本应确认的内容记入卷末报告和进度文件的 `pending_review`。详见 `sumeru-worldbuilder`。
+9. **确定性操作脚本化**：凡是结果应当唯一确定的操作必须调用脚本，禁止由模型估算或手工处理：
+   - 字数统计：`skills/sumeru-review/scripts/chapter-word-counter.py`
+   - 章节命名与完整性校验：`skills/sumeru-write/scripts/validate-chapters.py`
+   - 多平台格式导出：`skills/sumeru-finalize/scripts/export-platforms.py`
+   - 全书批量替换：`skills/sumeru-finalize/scripts/batch-replace.py`
+   - 敏感词词表匹配：`skills/sumeru-finalize/scripts/sensitive-scan.py`
+10. **平台规则配置化**：各平台的格式规则只存在于 `skills/sumeru-finalize/references/platforms.json`，脚本与文档都不得另行写死；新增平台只改该配置。
+11. **单一事实来源**：全流程进度只记录在 `.sumeru/session/WORLDBUILDER_PROGRESS.json`，创作需求与配置只记录在 `.sumeru/session/requirements.json`；审查只产出一份 `剧情审查报告.md`。不为同一信息新增并行文件。
 
 ## 核心文件索引
 - `AGENTS.md` - 本文件，全局规则与命令说明
 - `skills/*/SKILL.md` - 各Skill的详细使用文档与参数说明
 - `skills/*/scripts/` - Skill专属工具脚本（按需存在）
 - `skills/*/references/` - Skill专属参考资料（按需存在）
+- `tests/test_scripts.py` - 工具脚本测试，运行 `python3 -m unittest discover -s tests`
