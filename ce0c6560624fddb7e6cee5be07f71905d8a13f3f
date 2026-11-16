@@ -1,0 +1,14 @@
+.github/workflows/tests.yml
+  h_414dea22084ef6 11,15-22
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "2add6d44b2e3176873e4960c65c8649648b7d832",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
