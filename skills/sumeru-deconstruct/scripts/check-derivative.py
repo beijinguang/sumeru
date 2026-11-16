@@ -63,16 +63,22 @@ def longest_overlaps(source_norm, output_norm, min_len, limit=20):
     seed = min_len + 1
     if len(output_norm) < seed or len(source_norm) < seed:
         return []
-    source_grams = {source_norm[i:i + seed] for i in range(len(source_norm) - seed + 1)}
+    # 存哈希而非 n-gram 字符串本身：百万字原作下内存从 GB 级降到百 MB 级；
+    # 命中后再用 find 做真实字符串校验，哈希碰撞的假阳性会被自然排除
+    source_hashes = {hash(source_norm[i:i + seed])
+                     for i in range(len(source_norm) - seed + 1)}
     runs = []
     i = 0
     n = len(output_norm)
     while i <= n - seed:
         gram = output_norm[i:i + seed]
-        if gram not in source_grams:
+        if hash(gram) not in source_hashes:
             i += 1
             continue
         pos = source_norm.find(gram)
+        if pos == -1:  # 哈希碰撞假阳性，并非真实重合
+            i += 1
+            continue
         # 向左右扩展成最长公共片段
         left = 0
         while (i - left - 1 >= 0 and pos - left - 1 >= 0
