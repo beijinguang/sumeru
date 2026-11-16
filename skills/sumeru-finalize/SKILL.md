@@ -239,7 +239,6 @@ python3 skills/sumeru-finalize/scripts/sensitive-scan.py --wordlist 我的词表
 - `stats.json`：统计与导出结果，包含 `passed`、errors、warnings、逐章字数
 - `report.md`：完稿校验报告
 - `sensitive-hits.json`：敏感词词表命中记录（由 `scripts/sensitive-scan.py` 生成）
-- `export-config.json`：各平台导出配置参数
 
 **用户可见输出（当前工作目录）**：
 - `publish/`：各平台导出版本，按平台名分类存放

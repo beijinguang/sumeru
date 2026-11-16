@@ -149,6 +149,7 @@ python3 skills/sumeru-outline/scripts/plan-chapters.py --total-words 300000 --ch
 - **与前后章关联**：承接上章什么内容，引出下章什么内容
 - **场景地点**：本章主要发生的场景
 - **POV视角**：本章采用谁的视角（默认主角视角）
+- **所属卷号**：本章所属分卷编号（volumeNumber，供校验脚本核对卷归属）
 - **情绪基调**：本章的整体情绪氛围（紧张/轻松/热血/温情等）
 
 **细纲输出格式：**
@@ -231,8 +232,8 @@ flowchart LR
 | 世界观完整 | 背景/力量体系/社会规则/地理四项齐全 | 人工检查 `小说大纲_世界观设定.md` |
 | 人设完整 | 主角 + 3-5 配角 + 1-3 反派的设定卡齐全 | 检查 `characters.json` |
 | 分卷规划 | 每卷含卷名/核心冲突/升级节点/转折/卷末钩子 | 检查 `chapter-plan.json` |
-| 细纲完整 | 章节数符合篇幅口径，每章 12 个必填字段齐全 | `plan-chapters.py --validate` 无 error |
-| 细纲可独立成章 | 每章 `plotProgression` ≥3 个节点 | 校验脚本警告项 = 0 |
+| 细纲完整 | 章节数符合篇幅口径，每章 13 个必填字段齐全 | `plan-chapters.py --validate` 无 error |
+| 细纲可独立成章 | 每章 `plotProgression` ≥3 个节点 | 校验脚本中 plotProgression 相关警告 = 0 |
 | 命名合规 | 无 P0/P1 命中 | `compliance-check.json` 的 `passed = true` |
 
 **未通过验收不得进入 sumeru-write**。

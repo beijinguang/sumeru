@@ -9,6 +9,7 @@ Sumeru 工具脚本回归测试（仅依赖标准库）
 
 import importlib.util
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -165,6 +166,59 @@ class BuildTest(unittest.TestCase):
         self.assertIn("冷锋", names)
         self.assertGreater(len(names), 20)
 
+    def test_blocklist_failure_returns_none(self):
+        # 文件缺失 → None（调用方必须退出码 2，禁止降级名单）
+        self.assertIsNone(build.load_blocklist("/nonexistent/nope.md"))
+        # 小节缺失 / 条目过少 → None
+        with tempfile.TemporaryDirectory() as tmp:
+            broken = Path(tmp) / "blocklist.md"
+            broken.write_text("# IP黑名单\n\n## 一、背景\n\n内容被重排了。\n", encoding="utf-8")
+            self.assertIsNone(build.load_blocklist(broken))
+            sparse = Path(tmp) / "sparse.md"
+            sparse.write_text(
+                "## 二、绝对禁用清单\n\n**角色**：萧炎、林动\n\n## 三、其他\n",
+                encoding="utf-8")
+            self.assertIsNone(build.load_blocklist(sparse))
+
+    def test_cli_exits_2_on_missing_blocklist(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            chapters = root / "chapters"
+            write_chapter(chapters, 1, "初见")
+            r = subprocess.run(
+                [sys.executable, str(ROOT / "skills/sumeru-finalize/scripts/build.py"),
+                 "--chapters", str(chapters), "--blocklist", str(root / "nope.md"),
+                 "--check-only", "--report-dir", str(root / ".sumeru/finalize")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("黑名单", r.stdout)
+
+    def test_cli_exits_2_on_unknown_format(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            chapters = root / "chapters"
+            write_chapter(chapters, 1, "初见")
+            r = subprocess.run(
+                [sys.executable, str(ROOT / "skills/sumeru-finalize/scripts/build.py"),
+                 "--chapters", str(chapters), "--format", "pdf",
+                 "--out", str(root / "publish"),
+                 "--report-dir", str(root / ".sumeru/finalize")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("未知导出格式", r.stdout)
+
+    def test_cli_check_only_passes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            chapters = root / "chapters"
+            write_chapter(chapters, 1, "初见")
+            r = subprocess.run(
+                [sys.executable, str(ROOT / "skills/sumeru-finalize/scripts/build.py"),
+                 "--chapters", str(chapters), "--check-only",
+                 "--report-dir", str(root / ".sumeru/finalize")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)
+
     def test_export_all_formats(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -182,6 +236,9 @@ class BuildTest(unittest.TestCase):
                 self.assertTrue((target / name).exists(), name)
             with zipfile.ZipFile(target / "book.epub") as zf:
                 self.assertEqual(zf.read("mimetype"), b"application/epub+zip")
+                # EPUB 规范：mimetype 必须是首条且未压缩
+                self.assertEqual(zf.namelist()[0], "mimetype")
+                self.assertEqual(zf.getinfo("mimetype").compress_type, zipfile.ZIP_STORED)
                 self.assertIn("OEBPS/content.opf", zf.namelist())
             text = (target / "full.txt").read_text(encoding="utf-8")
             self.assertIn("第1章 初见", text)
@@ -240,7 +297,27 @@ class DerivativeTest(unittest.TestCase):
         result = derivative.check_derivative(self.SOURCE, report, "", 12)
         self.assertFalse(result["passed"])
         self.assertTrue(result["overlaps"])
-        self.assertGreaterEqual(result["overlaps"][0]["length"], 12)
+        self.assertGreater(result["overlaps"][0]["length"], 12)
+
+    def test_overlap_threshold_boundary(self):
+        """规范口径：≤12 字重合允许，>12 字违规（11/12 通过，13 失败）"""
+        source = "甲乙丙丁戊己庚辛壬癸子丑寅卯辰巳午未申酉戌亥"
+        for length, should_pass in ((11, True), (12, True), (13, False)):
+            with self.subTest(length=length):
+                segment = source[:length]
+                report = f"报告开头。{segment}报告结尾。"
+                result = derivative.check_derivative(source, report, "", 12)
+                self.assertEqual(result["passed"], should_pass, result["violations"])
+                if should_pass:
+                    self.assertEqual(result["overlaps"], [])
+                else:
+                    self.assertGreater(result["overlaps"][0]["length"], 12)
+
+    def test_reused_chapter_title_fails(self):
+        result = derivative.check_derivative(
+            self.SOURCE, "本文结构参考原作《第1章 风起》的写法。", "", 12)
+        self.assertFalse(result["passed"])
+        self.assertIn("第1章 风起", result["reusedTitles"])
 
     def test_forbidden_name_fails(self):
         result = derivative.check_derivative(self.SOURCE, "主角陆照野登场。", "陆照野", 12)
@@ -320,6 +397,71 @@ class TimelineTest(unittest.TestCase):
         self.assertTrue(warnings)
         strict_errors, _, _ = timeline.validate(data, strict=True)
         self.assertTrue(strict_errors)
+
+
+class CliExitCodeTest(unittest.TestCase):
+    """CLI 级退出码约定测试：0 通过 / 1 检查失败 / 2 参数或环境错误"""
+
+    SCRIPTS = ROOT / "skills"
+
+    def test_counter_missing_dir_exits_2(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r = subprocess.run(
+                [sys.executable, str(self.SCRIPTS / "sumeru-review/scripts/chapter-word-counter.py"),
+                 "--dir", str(Path(tmp) / "nope"), "--output", str(Path(tmp) / "out")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2)
+
+    def test_counter_empty_dir_exits_2(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            empty = Path(tmp) / "chapters"
+            empty.mkdir()
+            r = subprocess.run(
+                [sys.executable, str(self.SCRIPTS / "sumeru-review/scripts/chapter-word-counter.py"),
+                 "--dir", str(empty), "--output", str(Path(tmp) / "out")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("未找到匹配的章节文件", r.stdout)
+
+    def test_counter_success_exits_0(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            chapters = Path(tmp) / "chapters"
+            chapters.mkdir()
+            (chapters / "001-初见.md").write_text(
+                "陆照野站在临川城头，看云海翻涌。" * 30, encoding="utf-8")
+            r = subprocess.run(
+                [sys.executable, str(self.SCRIPTS / "sumeru-review/scripts/chapter-word-counter.py"),
+                 "--dir", str(chapters), "--output", str(Path(tmp) / "out")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)
+
+    def test_check_chapters_broken_outline_exits_1(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            chapters = root / "chapters"
+            write_chapter(chapters, 1, "初见")
+            outline = root / "outline.json"
+            outline.write_text('{"chapters": [broken', encoding="utf-8")
+            r = subprocess.run(
+                [sys.executable, str(self.SCRIPTS / "sumeru-write/scripts/check-chapters.py"),
+                 "--chapters", str(chapters), "--outline", str(outline),
+                 "--report-dir", str(root / ".sumeru/write")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("细纲 JSON 解析失败", r.stdout)
+
+    def test_check_chapters_pass_exits_0(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            chapters = root / "chapters"
+            write_chapter(chapters, 1, "初见")
+            r = subprocess.run(
+                [sys.executable, str(self.SCRIPTS / "sumeru-write/scripts/check-chapters.py"),
+                 "--chapters", str(chapters),
+                 "--outline", str(root / "nonexistent.json"),
+                 "--report-dir", str(root / ".sumeru/write")],
+                capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0)
 
 
 if __name__ == "__main__":

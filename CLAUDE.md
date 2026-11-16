@@ -8,7 +8,7 @@
 ## 技术栈
 - Skill框架：Claude Code Skill系统（兼容OpenCode superpowers体系）
 - 运行环境：macOS / Linux zsh
-- 依赖环境：Python 3.11+、Node.js 20.x（部分工具脚本依赖）
+- 依赖环境：Python 3.11+（脚本仅依赖标准库，实测兼容 3.9+）
 - 当前版本：v0.2.0
 
 ## 核心架构结构
@@ -103,7 +103,7 @@ python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,h
 python3 -m unittest discover -s tests -v
 ```
 
-新增或修改 `scripts/` 下任何脚本，必须同步补充 `tests/test_tools.py` 用例。
+新增或修改 `scripts/` 下任何脚本，必须同步补充测试用例：上游脚本的用例放 `tests/test_tools.py`，二开新增脚本的用例放 `tests/test_scripts.py`。
 
 ## 常用命令速查
 ### 全流程创作
@@ -248,7 +248,7 @@ python3 -m unittest discover -s tests -v
 │   ├── structure.json        # 逐章结构统计
 │   └── derivative-check.json # 拆书报告原创性检查
 ├── outline/          # 大纲阶段中间数据
-│   ├── chapter-plan.json      # 章节/分卷规划（plan-chapters.py 输出）
+│   ├── chapter-plan.json      # 章节/分卷规划（plan-chapters.py --output 显式生成；--emit-skeleton 默认写 chapter-outlines.json）
 │   ├── chapter-outlines.json  # **完整章节细纲（write阶段的输入）**
 │   └── compliance-check.json  # 命名合规检查结果（passed=true 才能写作）
 ├── write/            # 创作阶段中间数据

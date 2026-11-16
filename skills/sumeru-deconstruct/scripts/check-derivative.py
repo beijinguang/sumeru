@@ -5,7 +5,7 @@
 
 检查拆书/仿写报告是否过度复制原作文本，避免“拆书”变成“洗稿”。
 检查项：
-  1. 报告与原文的最长连续重合片段（默认 >=12 字即违规）
+  1. 报告与原文的最长连续重合片段（默认允许 ≤12 字，超过 12 字即违规）
   2. 报告中是否出现指定的原作角色名/地名（--forbid）
   3. 是否直接复用原作章节标题
 
@@ -52,15 +52,21 @@ def normalize_with_map(text):
 
 
 def longest_overlaps(source_norm, output_norm, min_len, limit=20):
-    """找出报告与原文的最长连续重合片段"""
-    if len(output_norm) < min_len or len(source_norm) < min_len:
+    """找出报告与原文中超过 min_len 的最长连续重合片段。
+
+    语义：min_len 为「允许的最长重合字数」，即 ≤min_len 的重合不违规，
+    只有 >min_len（严格大于）的片段才会被检出。因此播种 n-gram 的长度取
+    min_len+1，确保恰好 min_len 字的重合不会被误判。
+    """
+    seed = min_len + 1
+    if len(output_norm) < seed or len(source_norm) < seed:
         return []
-    source_grams = {source_norm[i:i + min_len] for i in range(len(source_norm) - min_len + 1)}
+    source_grams = {source_norm[i:i + seed] for i in range(len(source_norm) - seed + 1)}
     runs = []
     i = 0
     n = len(output_norm)
-    while i <= n - min_len:
-        gram = output_norm[i:i + min_len]
+    while i <= n - seed:
+        gram = output_norm[i:i + seed]
         if gram not in source_grams:
             i += 1
             continue
@@ -70,7 +76,7 @@ def longest_overlaps(source_norm, output_norm, min_len, limit=20):
         while (i - left - 1 >= 0 and pos - left - 1 >= 0
                and output_norm[i - left - 1] == source_norm[pos - left - 1]):
             left += 1
-        right = min_len
+        right = seed
         while (i + right < n and pos + right < len(source_norm)
                and output_norm[i + right] == source_norm[pos + right]):
             right += 1

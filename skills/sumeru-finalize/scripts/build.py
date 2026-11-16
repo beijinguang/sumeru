@@ -55,14 +55,6 @@ PLACEHOLDER = re.compile(r"(TODO|待补充|待完善|XXX|\[占位\])")
 ASCII_PUNCT = re.compile(r"[\u4e00-\u9fa5][,.!?;:]|[,.!?;:][\u4e00-\u9fa5]")
 REPEAT_CHAR = re.compile(r"(的的|了了|是是|在在|他他|她她|我我)")
 
-FALLBACK_BLOCKLIST = {
-    "萧炎", "林动", "叶凡", "石昊", "唐三", "韩立", "陈平安",
-    "李逍遥", "赵灵儿", "萧薰儿", "美杜莎", "小医仙",
-    "王语嫣", "桑稚", "温以凡", "秦苒", "祁醉", "桑延",
-    "冷锋", "龙百川", "赵蒙生", "周卫国", "叶寸心",
-    "莱戈拉斯", "索林", "二向箔", "赛博坦星", "潘多拉星",
-}
-
 
 # ---------------------------------------------------------------- 基础工具
 
@@ -74,15 +66,20 @@ def count_words(text):
 
 
 def load_blocklist(path):
-    """从 ip-blocklist.md 的「绝对禁用清单」小节提取名称集合"""
-    names = set(FALLBACK_BLOCKLIST)
+    """从 ip-blocklist.md 的「绝对禁用清单」小节提取名称集合。
+
+    返回 None 表示解析失败（文件缺失、小节缺失、条目过少）。
+    调用方必须以此终止（退出码 2），禁止退回内置降级名单，
+    避免合规扫描范围静默缩水——ip-blocklist.md 是唯一黑名单源。
+    """
     p = Path(path) if path else None
     if not p or not p.exists():
-        return names
+        return None
     text = p.read_text(encoding="utf-8")
     m = re.search(r"## 二、绝对禁用清单(.*?)(?=\n## )", text, re.S)
     if not m:
-        return names
+        return None
+    names = set()
     for line in m.group(1).splitlines():
         line = line.strip()
         if not line.startswith("**") or "：" not in line:
@@ -92,6 +89,9 @@ def load_blocklist(path):
             token = re.sub(r"（[^）]*）|\([^)]*\)", "", token).strip(" 　*`")
             if 2 <= len(token) <= 12:
                 names.add(token)
+    if len(names) < 20:
+        # 条目异常偏少，多半是小节标题或格式被重排导致解析缩水
+        return None
     return names
 
 
@@ -485,6 +485,11 @@ def main():
         Path(__file__).resolve().parents[2] / "sumeru-outline/references/ip-blocklist.md"
     )
     blocklist = load_blocklist(blocklist_path)
+    if blocklist is None:
+        print(f"❌ 无法从黑名单文件解析出禁用名称：{blocklist_path}")
+        print("   ip-blocklist.md 是唯一黑名单源，拒绝在名单缺失时继续（避免合规扫描静默缩水）。")
+        print("   请检查文件是否存在、小节「## 二、绝对禁用清单」是否完整。")
+        return 2
     for name in (n.strip() for n in args.allow.split(",") if n.strip()):
         blocklist.discard(name)
     errors, warnings, stats = check_chapters(
@@ -506,6 +511,10 @@ def main():
             print(f"❌ 未知平台：{unknown}，可选：{list(DEFAULT_PLATFORMS)}")
             return 2
         formats = {f.strip() for f in args.format.split(",") if f.strip()}
+        invalid_formats = formats - {"md", "txt", "html", "epub"}
+        if invalid_formats:
+            print(f"❌ 未知导出格式：{sorted(invalid_formats)}，可选：md, txt, html, epub")
+            return 2
         for key in keys:
             out_dir = export_platform(
                 chapters, key, DEFAULT_PLATFORMS[key], args.out,

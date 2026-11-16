@@ -4,12 +4,15 @@
 网文章节字数统计工具
 功能：精确统计各章节字数，识别过长/过短章节，生成统计报告
 输出：自动保存到 .sumeru/review/word-count.json 和 .sumeru/review/word-count.md
+
+退出码：0 统计成功 / 1 统计过程出错 / 2 参数或环境错误（目录不存在、零章节）
 """
 
 import os
 import re
 import json
 import argparse
+import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -232,10 +235,10 @@ def main():
                         help=f'理想最小字数 (默认: {DEFAULT_WORD_RANGE[0]})')
     parser.add_argument('--max', type=int, default=DEFAULT_WORD_RANGE[1],
                         help=f'理想最大字数 (默认: {DEFAULT_WORD_RANGE[1]})')
-    parser.add_argument('--warn-min', type=int, default=WARNING_RANGE[0],
-                        help=f'警告最小字数 (默认: {WARNING_RANGE[0]})')
-    parser.add_argument('--warn-max', type=int, default=WARNING_RANGE[1],
-                        help=f'警告最大字数 (默认: {WARNING_RANGE[1]})')
+    parser.add_argument('--warn-min', type=int, default=None,
+                        help=f'警告最小字数 (默认: 随 --min 联动，不小于 {WARNING_RANGE[0]})')
+    parser.add_argument('--warn-max', type=int, default=None,
+                        help=f'警告最大字数 (默认: 随 --max 联动，不小于 {WARNING_RANGE[1]})')
     parser.add_argument('--output', '-o', default='.sumeru/review/',
                         help='报告输出目录 (默认: .sumeru/review/)')
 
@@ -243,23 +246,32 @@ def main():
 
     try:
         chapter_files = scan_chapters(args.dir, args.pattern)
-        if not chapter_files:
-            print(f"❌ 在目录 {args.dir} 中未找到匹配的章节文件")
-            return
+    except FileNotFoundError as exc:
+        print(f"❌ {exc}")
+        return 2
 
-        print(f"🔍 找到 {len(chapter_files)} 个章节文件，正在统计...")
+    if not chapter_files:
+        print(f"❌ 在目录 {args.dir} 中未找到匹配的章节文件")
+        return 2
+
+    # 警告区间随理想区间联动：不显式传参时不小于既有默认值，避免用户收窄
+    # 理想区间（如番茄 2000-3000）时警告下界高于理想下界造成判定混乱
+    warn_min = args.warn_min if args.warn_min is not None else min(WARNING_RANGE[0], args.min)
+    warn_max = args.warn_max if args.warn_max is not None else max(WARNING_RANGE[1], args.max)
+
+    print(f"🔍 找到 {len(chapter_files)} 个章节文件，正在统计...")
+    try:
         analysis_result = analyze_chapters(
             chapter_files,
             ideal_range=(args.min, args.max),
-            warning_range=(args.warn_min, args.warn_max)
+            warning_range=(warn_min, warn_max)
         )
-
         generate_report(analysis_result, args.output)
-
     except Exception as e:
         print(f"❌ 执行出错: {str(e)}")
-        exit(1)
+        return 1
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

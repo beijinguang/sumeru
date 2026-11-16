@@ -50,12 +50,17 @@ def parse_range(value):
 
 
 def load_outline(path):
+    """返回 {chapterNumber: chapter} 映射。
+
+    路径为空或文件不存在返回 None（不启用细纲对齐校验）；
+    JSON 损坏抛出 ValueError，由调用方转为 error，禁止静默跳过校验。
+    """
     if not path or not Path(path).exists():
         return None
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return None
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"细纲 JSON 解析失败：{path}（{exc}）") from exc
     return {ch["chapterNumber"]: ch for ch in data.get("chapters", [])
             if isinstance(ch.get("chapterNumber"), int)}
 
@@ -109,7 +114,11 @@ def check(chapters_dir, outline_path=None, strict=False):
     if missing:
         errors.append(f"章节号缺失：{missing[:20]}{'...' if len(missing) > 20 else ''}")
 
-    outline = load_outline(outline_path)
+    try:
+        outline = load_outline(outline_path)
+    except ValueError as exc:
+        errors.append(str(exc))
+        outline = None
     total_words = 0
     stats_rows = []
     for ch in chapters:
