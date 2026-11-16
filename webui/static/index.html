@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>须弥写作 · 驾驶舱</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <div class="brand">📖 须弥写作</div>
+    <button class="nav-btn active" data-page="dashboard">仪表盘</button>
+    <button class="nav-btn" data-page="chapters">章节管理</button>
+    <button class="nav-btn" data-page="tools">工具面板</button>
+    <button class="nav-btn" data-page="export">导出中心</button>
+    <button class="nav-btn" data-page="assistant">指令助手</button>
+    <div class="sidebar-footer" id="gate-mini"></div>
+  </nav>
+
+  <main class="main">
+    <!-- ① 仪表盘 -->
+    <section id="page-dashboard" class="page">
+      <h1>仪表盘</h1>
+      <div class="cards" id="stat-cards"></div>
+      <h2>门禁状态</h2>
+      <div class="gates" id="gate-list"></div>
+      <h2>章节字数分布</h2>
+      <div class="chart" id="word-chart"><div class="empty">在工具面板运行「字数统计」后显示</div></div>
+      <div class="chart-legend" id="chart-legend"></div>
+    </section>
+
+    <!-- ② 章节管理 -->
+    <section id="page-chapters" class="page hidden">
+      <h1>章节管理</h1>
+      <div class="chapter-layout">
+        <div class="chapter-list" id="chapter-list"></div>
+        <div class="chapter-view">
+          <div id="chapter-meta" class="chapter-meta"></div>
+          <textarea id="chapter-editor" class="hidden" spellcheck="false"></textarea>
+          <pre id="chapter-readonly" class="chapter-readonly"></pre>
+          <div class="chapter-actions">
+            <span id="chapter-words" class="muted"></span>
+            <button id="btn-edit" class="btn">编辑</button>
+            <button id="btn-save" class="btn primary hidden">保存（自动备份）</button>
+            <button id="btn-cancel" class="btn hidden">取消</button>
+          </div>
+          <div id="outline-panel" class="outline-panel"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 工具面板 -->
+    <section id="page-tools" class="page hidden">
+      <h1>工具面板</h1>
+      <div class="tool-grid">
+        <div class="tool-card">
+          <h3>字数统计 <code>chapter-word-counter.py</code></h3>
+          <label>目录 <input id="tc-counter-dir" value="chapters"></label>
+          <label>理想区间 <input id="tc-counter-min" type="number" value="3000" class="num"> -
+            <input id="tc-counter-max" type="number" value="5000" class="num"></label>
+          <button class="btn primary run-tool" data-tool="counter"
+            data-builder="counter">运行</button>
+        </div>
+        <div class="tool-card">
+          <h3>章节结构校验 <code>check-chapters.py</code></h3>
+          <label>章节目录 <input id="tc-check-chapters" value="chapters"></label>
+          <label>细纲 <input id="tc-check-outline" value=".sumeru/outline/chapter-outlines.json"></label>
+          <label class="inline"><input id="tc-check-strict" type="checkbox"> 严格模式</label>
+          <button class="btn primary run-tool" data-tool="check"
+            data-builder="check">运行</button>
+        </div>
+        <div class="tool-card">
+          <h3>时间线校验 <code>validate-timeline.py</code></h3>
+          <label>时间线 <input id="tc-timeline-file" value=".sumeru/review/timeline.json"></label>
+          <button class="btn primary run-tool" data-tool="timeline"
+            data-builder="timeline">运行</button>
+        </div>
+        <div class="tool-card">
+          <h3>完稿检查 / 导出 <code>build.py</code></h3>
+          <label>章节目录 <input id="tc-build-chapters" value="chapters"></label>
+          <label>平台 <select id="tc-build-platform">
+            <option value="all">全平台</option><option value="qidian">起点</option>
+            <option value="fanqie">番茄</option><option value="jjwxc">晋江</option>
+            <option value="zongheng">纵横</option><option value="17k">17K</option></select></label>
+          <label>格式 <input id="tc-build-formats" value="md,txt,html,epub"></label>
+          <label>书名 <input id="tc-build-title" placeholder="默认取章节标题"></label>
+          <label class="inline"><input id="tc-build-checkonly" type="checkbox" checked> 仅检查不导出</label>
+          <button class="btn primary run-tool" data-tool="build"
+            data-builder="build">运行</button>
+        </div>
+        <div class="tool-card">
+          <h3>敏感词扫描 <code>sensitive-scan.py</code></h3>
+          <label>章节目录 <input id="tc-sensitive-dir" value="chapters"></label>
+          <button class="btn primary run-tool" data-tool="sensitive"
+            data-builder="sensitive">运行</button>
+        </div>
+        <div class="tool-card">
+          <h3>拆书分析 <code>analyze-book.py</code></h3>
+          <label>原作文件 <input id="tc-analyze-file" placeholder="参考书.txt"></label>
+          <label>或章节目录 <input id="tc-analyze-dir" placeholder="reference/chapters"></label>
+          <button class="btn primary run-tool" data-tool="analyze"
+            data-builder="analyze">运行</button>
+        </div>
+      </div>
+      <h2>运行结果</h2>
+      <div id="tool-result" class="tool-result empty">尚未运行任何工具</div>
+      <h2>报告查看</h2>
+      <div class="report-tabs" id="report-tabs"></div>
+      <div id="report-view" class="report-view empty">选择一个报告</div>
+    </section>
+
+    <!-- ④ 导出中心 -->
+    <section id="page-export" class="page hidden">
+      <h1>导出中心</h1>
+      <div class="export-form">
+        <label>平台 <select id="export-platform">
+          <option value="all">全平台</option><option value="qidian">起点</option>
+          <option value="fanqie">番茄</option><option value="jjwxc">晋江</option>
+          <option value="zongheng">纵横</option><option value="17k">17K</option></select></label>
+        <label>格式 <input id="export-formats" value="md,txt,html,epub"></label>
+        <label>书名 <input id="export-title" placeholder="书名（用于扉页）"></label>
+        <label>作者 <input id="export-author" placeholder="作者"></label>
+        <button id="btn-export" class="btn primary">导出</button>
+      </div>
+      <div id="export-result" class="tool-result empty"></div>
+      <h2>产物下载</h2>
+      <div id="export-files"></div>
+    </section>
+
+    <!-- ⑤ 指令助手 -->
+    <section id="page-assistant" class="page hidden">
+      <h1>指令助手</h1>
+      <p class="muted">根据当前项目状态推断下一步该让 AI 做什么。复制指令后到
+        Claude Code / OpenCode 中执行。</p>
+      <div id="next-step" class="next-step"></div>
+      <h2>常用指令速查</h2>
+      <div class="cheatsheet">
+        <div><code>/sumeru-worldbuilder 玄幻 "核心创意"</code><span>全流程启动</span></div>
+        <div><code>/sumeru-topic 都市 "关键词" 起点平台</code><span>选题策划</span></div>
+        <div><code>/sumeru-outline "创意描述"</code><span>大纲+完整细纲</span></div>
+        <div><code>/sumeru-write 全部章节</code><span>按细纲批量写作</span></div>
+        <div><code>/sumeru-review 第1-50章</code><span>逻辑审查</span></div>
+        <div><code>/sumeru-polish 第1-20章 轻度润色</code><span>内容润色</span></div>
+        <div><code>/sumeru-finalize 导出全平台格式</code><span>完稿导出</span></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>
