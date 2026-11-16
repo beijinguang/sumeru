@@ -1,0 +1,20 @@
+tests/test_webui.py
+  h_414dea22084ef6 1-220
+webui/api.py
+  h_414dea22084ef6 1-325
+webui/lib/backup.py
+  h_414dea22084ef6 1-46
+webui/server.py
+  h_414dea22084ef6 1-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "e606e917430ac04db6cdf1d416da6509b1839e9c",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
