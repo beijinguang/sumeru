@@ -1,0 +1,20 @@
+CLAUDE.md
+  h_414dea22084ef6 41
+README.md
+  h_414dea22084ef6 58-59,65-69
+skills/sumeru-outline/scripts/plan-chapters.py
+  h_414dea22084ef6 38
+skills/sumeru-worldbuilder/SKILL.md
+  h_414dea22084ef6 248
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "b079c93c9807d56e5f286f1b5296eeb1bacf1c23",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
