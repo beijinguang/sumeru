@@ -1,0 +1,18 @@
+skills/sumeru-deconstruct/scripts/analyze-book.py
+  h_414dea22084ef6 19,256,263
+skills/sumeru-finalize/scripts/build.py
+  h_414dea22084ef6 26,28,329-348
+skills/sumeru-finalize/scripts/sensitive-scan.py
+  h_414dea22084ef6 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "2792a9a4c0b73d83932d12d3f41f00c2e63127a8",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
