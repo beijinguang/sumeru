@@ -1,0 +1,20 @@
+.github/workflows/release.yml
+  h_414dea22084ef6 108-109,140,144
+.github/workflows/tests.yml
+  h_414dea22084ef6 12-15,19,22
+CLAUDE.md
+  h_414dea22084ef6 11
+pyproject.toml
+  h_414dea22084ef6 1-18
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "263e3dc8da3c6e0f404e69124ce13a246d80afc6",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
