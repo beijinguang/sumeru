@@ -8,11 +8,18 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.11", "3.13"]
+        include:
+          # 3.9 在 ubuntu-24.04 之后的新版 runner 镜像中不再提供，固定到 24.04
+          - python-version: "3.9"
+            os: ubuntu-24.04
+          - python-version: "3.11"
+            os: ubuntu-latest
+          - python-version: "3.13"
+            os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
