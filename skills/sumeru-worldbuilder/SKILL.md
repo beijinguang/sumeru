@@ -9,6 +9,7 @@ type: skill
 ### 核心功能
 worldbuilder 是网文创作的一站式主控技能，负责统筹协调从创意萌芽到作品完稿的完整创作链路，构建完整统一的故事世界。通过智能编排各专项技能的调用顺序与参数传递，实现自动化、流水线式的网文创作体验：
 
+0. **可选前置·拆书**：如果用户提供了参考书/对标作品，先调用 `sumeru-deconstruct` 输出结构模板与节奏参数（只拆结构，不抄文本）
 1. **选题策划**：调用 `sumeru-topic` 进行市场分析、选题定位，生成核心创意与卖点
 2. **大纲设计**：调用 `sumeru-outline` 构建完整世界观、人物设定、分卷大纲与**完整章节细纲**
 3. **内容创作**：调用 `sumeru-write` 按大纲进行分章节内容撰写，保持风格统一（**按卷推进，本卷章节全部完成后才进入本卷审查**）
@@ -17,25 +18,16 @@ worldbuilder 是网文创作的一站式主控技能，负责统筹协调从创�
 6. **完稿校验**：调用 `sumeru-finalize` 在全部分卷完成后，对**所有已润色章节**完成错别字检查、标点规范、逻辑漏洞最终排查与作品打包
 **编排方式**：第1-2步只做一次；第3-5步以「卷」为单位循环执行（写完一卷 → 审查该卷 → 润色该卷 → 下一卷）；第6步在全部分卷完成后执行。关键节点设有用户确认点，详见「Skill 协调流程」。
 
-### ⚠️ 全局约束：子Agent并行处理规则
+### 全局约束
 
-worldbuilder 在协调所有涉及章节级操作的子技能时，强制执行 AGENTS.md 中定义的**子Agent并行处理规则**：
+两项全局硬约束统一定义在 AGENTS.md，本 Skill 不重复展开：
+- **子Agent并行**：每个子Agent最多负责 3 个章节（写作/审查/润色/校验/细纲均适用）
+- **自动备份**：review / polish 修改 `chapters/` 前，必须备份到 `.sumeru/write/original/`
 
-**每个子Agent最多负责3个章节**（硬性约束，详见 AGENTS.md "子Agent并行处理规则"）
-
-此规则适用于以下所有阶段：
-- **写作阶段**（sumeru-write）
-- **审查阶段**（sumeru-review）：审查和轻量修复
-- **润色阶段**（sumeru-polish）
-- **完稿阶段**（sumeru-finalize）
-- **细纲生成**（sumeru-outline）
-
-**设计原因**：详见 AGENTS.md "子Agent并行处理规则"
-
-**worldbuilder的调度责任**：
-- worldbuilder在调用各子技能时，必须确保子技能遵循3章/Agent的约束
-- 如果子技能未自动遵守此约束，worldbuilder需要通过参数或指令强制执行
-- 监控子技能的执行过程，确认Agent分配符合约束
+worldbuilder 的调度责任只有三条：
+1. 调用子技能时显式传递“每Agent最多3章”参数
+2. 在阶段检查点执行 AGENTS.md 定义的「阶段门禁规则」
+3. 门禁未通过时阻断流程，不得“先往下走再说”
 
 ### Skill 协调流程
 
@@ -46,7 +38,13 @@ worldbuilder 采用**按卷循环**编排：选题和大纲只做一次，之后
     ↓
 [收集创作需求 → 保存到 .sumeru/session/requirements.json]
     ↓
+[可选][sumeru-deconstruct] 拆书分析
+    → 输入: 用户提供的参考书/章节目录
+    → 输出: 拆书报告_*.md, .sumeru/deconstruct/structure.json
+    → 门禁: derivative-check.json 的 passed=true
+    ↓
 [sumeru-topic] 选题策划
+    → 输入: 可选复用拆书输出的结构模板与节奏参数（不含原作专名）
     → 输出: 选题策划报告.md, .sumeru/topic/options.json
     ↓
 【确认点 A】用户选定选题方案
@@ -65,7 +63,7 @@ worldbuilder 采用**按卷循环**编排：选题和大纲只做一次，之后
 │
 │  [sumeru-write] 写完本卷全部章节（波次并行，每个Agent最多3章）
 │      → 输出: chapters/*.md, .sumeru/write/*
-│      → 校验: 运行 validate-chapters.py，确认本卷章节齐全、命名合规
+│      → 校验: 运行 check-chapters.py，确认本卷章节齐全、命名合规
 │      ↓
 │  [sumeru-review] 审查本卷章节，并核对与前面各卷的一致性
 │      → 输出: 剧情审查报告.md, .sumeru/review/*
@@ -105,15 +103,31 @@ worldbuilder 采用**按卷循环**编排：选题和大纲只做一次，之后
 #### 关键阶段检查点说明
 每个阶段、每一卷完成后都更新 `.sumeru/session/WORLDBUILDER_PROGRESS.json`，任务重启时从上次未完成的卷和阶段继续：
 - **大纲阶段**：确认 `chapter-outlines.json` 生成且包含完整章节列表与分卷信息（`meta.volumes`）
-- **每卷写作**：运行 `skills/sumeru-write/scripts/validate-chapters.py`，确认本卷章节与细纲一致、命名合规
+- **每卷写作**：运行 `skills/sumeru-write/scripts/check-chapters.py`，确认本卷章节与细纲一致、命名合规
 - **每卷审查**：确认 `剧情审查报告.md` 已包含本卷结果；`bottom-line-checklist.json` 中本卷相关底线问题已标记为「已解决」或「需人工干预」。review 的修复直接修改 `chapters/`（修改前已自动备份）
 - **每卷润色**：确认润色已直接修改 `chapters/` 中的文件且润色后自检通过
 - **完稿阶段**：确认 `publish/` 目录下各平台格式导出完成
+
+#### 可执行门禁
+
+按卷循环时，门禁 2–4 以当前卷为范围逐卷执行。**门禁不通过必须阻断，不允许带病下游**：
+
+| 检查点 | 门禁条件 | 执行命令 |
+|--------|----------|----------|
+| 0. 拆书完成（可选） | 报告无原文复制、无原作专名 | `check-derivative.py` 退出码 0 |
+| 1. 大纲完成 | 细纲字段齐全、章节连续、分卷覆盖；命名合规 | `plan-chapters.py --validate .sumeru/outline/chapter-outlines.json` 且 `compliance-check.json` 的 `passed=true` |
+| 2. 创作完成 | 章节数=细纲数、命名规范、无空章 | `check-chapters.py --chapters chapters --outline .sumeru/outline/chapter-outlines.json` 无 error |
+| 3. 审查完成 | `剧情审查报告.md` 已更新；底线清单无「待修复」；时间线校验无 error | 检查 `.sumeru/review/bottom-line-checklist.json`；`fix-plan.json` 无 pending |
+| 4. 润色完成 | 已直接改 `chapters/`，备份存在，无占位符 | 抽查 `.sumeru/write/original/`；`build.py --check-only` 无占位符 error |
+| 5. 完稿完成 | 全平台导出成功，无禁用名称 | `build.py --platform all` 退出码 0，`publish/` 齐全 |
+
+**阶段失败处理**：门禁失败 → 记录到 `WORLDBUILDER_PROGRESS.json` 的 `blocked_at` → 只重跑失败阶段 → 重新过门禁。禁止跳过门禁直接进入下一阶段。
 
 ### 数据共享机制
 
 所有 skill 通过 `.sumeru/` 目录共享数据：
 - `session/` - 全局会话配置、用户需求、进度状态
+- `deconstruct/` - 拆书结构数据 → 供 topic、outline 参考（只传结构参数，不传专名）
 - `topic/` - 选题数据 → 供 outline 使用
 - `outline/` - 大纲数据 → 供 write、review 使用
   - **`chapter-outlines.json`** - 完整章节细纲 → **供 write 进行并行批量生成**
@@ -154,7 +168,7 @@ flowchart TD
 4. **大纲阶段**：先输出世界观与人设，再生成完整大纲和**所有章节细纲**（含分卷信息），用户确认（确认点 B）后进入写作
 5. **试写阶段**：先写第1-3章，用户确认文风、节奏与人设呈现（确认点 C）。前三章决定读者留存，也决定后续全部章节的风格基准，必须先定下来再批量生成
 6. **分卷循环**：对每一卷依次执行
-    - **写作**：调用 `sumeru-write` 写完本卷全部章节，按波次并行并传递章节衔接上下文；完成后运行 `validate-chapters.py` 校验
+    - **写作**：调用 `sumeru-write` 写完本卷全部章节，按波次并行并传递章节衔接上下文；完成后运行 `check-chapters.py` 校验
     - **审查**：调用 `sumeru-review` 审查本卷。全局审查基于「大纲 + 细纲 + 已完成各卷的章节概要」，章节细节审查只针对本卷。轻量修复自动执行；需要修订细纲并重写章节时先经用户确认（确认点 D），重写后做级联影响检查；「修复 → 验证」最多2轮，仍未解决的标记「需人工干预」
     - **润色**：调用 `sumeru-polish` 润色本卷，子Agent保存前执行润色后自检
     - **卷末确认**：汇报本卷字数、已修复问题与需人工干预清单（确认点 E），更新进度文件后进入下一卷
@@ -206,7 +220,7 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 4️⃣ 主角性格偏好？[隐忍腹黑/张扬霸道/逗比搞笑/温柔沉稳/其他]
 > 隐忍腹黑
 5️⃣ 有没有特别喜欢的参考作品？比如类似《XX》的风格
-> 类似《大王饶命》的搞笑风格
+> 类似「轻松吐槽+反差萌」的搞笑风格
 ...
 
 ✅ 需求收集完成，给您确认一下：
@@ -214,7 +228,7 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 篇幅：100万字以上
 核心爽点：打脸+扮猪吃虎
 主角性格：隐忍腹黑
-风格参考：《大王饶命》搞笑风
+风格参考：轻松吐槽+反差萌
 是否确认？[Y/n]
 > Y
 🚀 开始创作！
@@ -228,12 +242,12 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 
 可选信息（不提供则使用默认值或自动生成）：
 - **作品标题**：如不提供则自动生成
-- **预期篇幅**：短篇（20万字内）/中篇（20-50万字）/长篇（50-100万字）/超长篇（100万字以上），默认中篇
+- **预期篇幅**：短篇（约20万字，40-70章）/中篇（20-50万字，70-170章）/长篇（50-100万字，170-340章）/超长篇（100万字以上，340章+），默认中篇；章节数按单章3000字由 `plan-chapters.py` 计算
 - **写作风格**：快节奏/均衡/详写/文艺，默认均衡
 - **整体调性**：幽默/严肃/励志/暗黑，默认中立
 - **输出目录**：作品输出目录路径，默认 ./output
 - **中断恢复**：传入上次的创作会话ID，可从断点恢复
-- **跳过阶段**：跳过指定阶段（topic/outline/write/review/polish/final），适用于续创或团队分工
+- **跳过阶段**：跳过指定阶段（deconstruct/topic/outline/write/review/polish/final），适用于续创或团队分工
 
 ### 使用示例
 
@@ -300,6 +314,9 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 所有中间状态数据统一存储在当前工作目录的 `.sumeru/` 目录下，避免上下文压缩或清理导致数据丢失：
 
 #### 全局存储结构
+
+目录规范统一见 AGENTS.md「数据持久化规范」，此处只列 worldbuilder 直接依赖的关键文件：
+
 ```
 .sumeru/
 ├── session/          # 会话全局数据
@@ -315,6 +332,7 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 │   ├── characters.json # 人物设定卡
 │   ├── plot.md       # 剧情大纲
 │   ├── plot-outline.json # 剧情大纲结构化数据
+│   ├── compliance-check.json # 命名合规门禁（passed=true 才能写作）
 │   └── chapter-outlines.json # **完整章节细纲（核心输出）**
 ├── write/            # 创作阶段输出
 │   ├── original/     # 最初原稿备份（首次修改前备份，之后不覆盖）
@@ -322,6 +340,7 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 │   └── progress.json # 创作进度跟踪
 ├── review/           # 审查阶段输出
 │   ├── timeline.json # 时间线数据
+│   ├── timeline-check.json # 时间线机器校验结果
 │   ├── issues.json   # 问题清单
 │   ├── fix-plan.json # 修复执行记录（已执行的修复操作详情）
 │   ├── outline-revisions.json # 大纲修订记录
@@ -355,14 +374,4 @@ worldbuilder 不直接重写章节：细纲修订与章节重写由 review 自�
 
 ### 高级配置：自定义阶段钩子（规划中）
 
-> ⚠️ 该能力为规划中特性，当前版本暂未实现，仅作为扩展接口预留。
-
-通过配置文件 `{output-dir}/hooks.json` 可以在各阶段前后插入自定义处理：
-```json
-{
-  "before_topic": "my-preprocess-script.sh",
-  "after_outline": "validate-outline.js",
-  "before_write": "setup-write-env.py",
-  "after_final": "deploy-to-platform.sh"
-}
-```
+> ⚠️ 规划中特性，当前版本未实现。预留接口：`{output-dir}/hooks.json`，支持 `before_topic` / `after_outline` / `before_write` / `after_final` 挂载自定义脚本。

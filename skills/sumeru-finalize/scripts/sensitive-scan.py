@@ -6,7 +6,7 @@
 用法：python3 sensitive-scan.py [--dir chapters] [--wordlist references/sensitive-words.txt]
 词表格式：每行 "级别|词语|修改建议"（建议可省略），级别为 1/2/3，# 开头为注释
 输出：.sumeru/finalize/sensitive-hits.json
-注意：词表匹配只是第一遍筛查，情节与描写层面的敏感内容仍需按 sensitive-content-standard.md 做语义检查
+注意：词表匹配只是第一遍筛查，情节与描写层面的敏感内容仍需按 SKILL.md 的「敏感词检测标准」做语义检查
 """
 
 import argparse

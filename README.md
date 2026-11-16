@@ -9,7 +9,7 @@
 ## ✨ 核心特性
 
 - **全流程覆盖**: 从选题策划到多平台导出，覆盖网文创作所有核心环节
-- **模块化架构**: 7个独立Skill模块，可单独调用也可全流程自动编排
+- **模块化架构**: 8个独立Skill模块，可单独调用也可全流程自动编排
 - **Vibe Coding**: 自然语言指令驱动，无需学习复杂操作
 - **市场导向**: 基于AI对网文市场的知识推理分析题材趋势（非实时榜单数据），提供选题可行性评估
 - **逻辑自洽**: 自动校验时间线、剧情一致性、人物OOC等问题
@@ -17,7 +17,11 @@
 - **多平台兼容**: 导出适配起点、番茄、晋江、纵横等主流平台格式
 - **断点续传**: 所有创作数据自动持久化，支持中断后恢复进度
 - **按卷推进**: 写作→审查→润色以卷为单位循环，问题在一卷内发现并修复；关键节点由你确认，也可指定「全自动」一路写完
-- **确定性脚本**: 字数统计、章节校验、批量替换、平台导出、敏感词词表匹配由脚本完成，不靠模型估算
+- **合规可控**: 内置 IP/真实人物/真实地名黑名单与四步命名重构法，完稿阶段自动扫描，命中即阻断导出
+- **确定性工具**: 章节规划、结构校验、字数统计、多平台导出均有脚本兜底，不靠模型心算
+- **阶段门禁**: 每个阶段有可执行的验收条件，未通过不允许进入下一阶段
+- **拆书不抄书**: 拆书报告强制做原文重合检查（≤12 字）与原作专名检查，输出结构模板而非换皮文本
+- **时间线可验算**: review 阶段把事件抽成结构化时间线，脚本校验时序倒流、年龄矛盾、区间重叠、因果引用
 
 ## 🏗️ 系统架构
 
@@ -27,12 +31,27 @@
 skills/
 ├── sumeru-worldbuilder/  # 世界构建师Skill，统筹全流程创作，负责整个故事世界的搭建与落地
 ├── sumeru-topic/         # 选题策划Skill，市场分析+创意生成
+├── sumeru-deconstruct/   # 拆书分析Skill，结构拆解+仿写模板（只拆结构不抄文本）
 ├── sumeru-outline/       # 大纲设计Skill，世界观+人设+剧情框架
 ├── sumeru-write/         # 章节撰写Skill，单章/批量创作+续写
 ├── sumeru-review/        # 逻辑审查Skill，时间线+剧情+人物一致性校验
 ├── sumeru-polish/        # 内容润色Skill，文笔优化+节奏调整+风格统一
 └── sumeru-finalize/      # 完稿校验Skill，合规检查+多平台格式导出
 ```
+
+## 📏 篇幅与字数口径
+
+所有 Skill 共用一套口径，避免“短篇 20 章却只有 8 万字”这类错位：
+
+| 篇幅 | 目标总字数 | 建议章节数 | 单章基准 |
+|------|-----------|-----------|----------|
+| 短篇 | 20 万字 | 40-70 章 | 3000 字 |
+| 中篇 | 20-50 万字 | 70-170 章 | 3000 字 |
+| 长篇 | 50-100 万字 | 170-340 章 | 3000 字 |
+| 超长篇 | 100 万字以上 | 340 章以上 | 3000 字 |
+
+平台差异：起点 3000-5000 字/章、番茄 2000-3000、晋江 2500-4000、纵横 3000-6000、17K 2000-4000。
+章节数由 `plan-chapters.py` 计算，不手算。
 
 ## 🚀 安装方式
 
@@ -205,7 +224,7 @@ npx skills add beijinguang/sumeru
 
 #### 4. 逻辑审查 Skill
 **适用场景**：检查剧情bug、时间线错误、人物OOC、逻辑漏洞、字数不足
-**功能**：**三阶段审查修复流程**——全局审查→章节细节审查（子Agent并行，每个Agent最多3章）→统一修复。自动发现剧情矛盾和不合理之处，**自动修复所有轻量级问题**（修复结果直接修改 chapters/ 目录，修改前自动备份），**对严重问题自动修订大纲并重写对应章节**。
+**功能**：**三阶段审查修复流程**——全局审查（含结构化时间线抽取 + 机器校验）→章节细节审查（子Agent并行，每个Agent最多3章）→统一修复。自动发现剧情矛盾和不合理之处，**自动修复所有轻量级问题**（修复结果直接修改 chapters/ 目录，修改前自动备份），**对严重问题自动修订大纲并重写对应章节**，六类底线问题零遗漏核验。
 
 ```bash
 /sumeru-review <章节范围>
@@ -314,6 +333,64 @@ npx skills add beijinguang/sumeru
 /sumeru-finalize 导出全平台格式                              # 导出全平台格式
 ```
 
+---
+
+#### 7. 拆书仿写分析 Skill
+**适用场景**：研究对标书、拆解爆款结构、学习节奏与钩子设计、做仿写方案
+**功能**：机械统计（章节字数、对话占比、段句长、章末钩子类型、视角、高频重复短语）+ 十二维结构拆解（黄金三章、人物功能位、爽点密度、伏笔台账、换图节奏）+ 抽象化结构模板。**只拆结构不抄文本**，报告强制做原创性检查。
+
+```bash
+/sumeru-deconstruct <原作文件或章节目录>
+```
+
+**可选参数说明：**
+| 参数 | 说明 | 示例 |
+|------|------|------|
+| 分析重点 | 指定拆解维度 | 黄金三章/爽点节奏/人物功能位/伏笔 |
+| 仿写方案 | 是否输出差异化仿写模板 | 要仿写方案 |
+| 平台 | 对标平台口径 | 起点/番茄 |
+
+**示例：**
+```bash
+/sumeru-deconstruct 参考书.txt 分析黄金三章和爽点节奏
+/sumeru-deconstruct reference/chapters 拆解人物功能位和伏笔台账
+/sumeru-deconstruct 参考书.txt 生成仿写方案 起点平台
+```
+
+> 💡 **门禁**：拆书报告与原文最长连续重合必须 ≤12 字，原作角色名/地名/专名不得出现，否则不允许交付或传给 outline。
+
+## 🧰 工具脚本
+
+除自然语言指令外，关键环节提供确定性脚本（仅依赖 Python 标准库）：
+
+```bash
+# 章节规划 / 细纲骨架 / 细纲校验
+python3 skills/sumeru-outline/scripts/plan-chapters.py --total-words 1000000 --chapter-words 3000 --volumes 5
+python3 skills/sumeru-outline/scripts/plan-chapters.py --validate .sumeru/outline/chapter-outlines.json
+
+# 章节结构 / 命名 / 缺章校验
+python3 skills/sumeru-write/scripts/check-chapters.py --chapters chapters \
+  --outline .sumeru/outline/chapter-outlines.json
+
+# 字数统计
+python3 skills/sumeru-review/scripts/chapter-word-counter.py --dir chapters
+
+# 时间线机器校验
+python3 skills/sumeru-review/scripts/validate-timeline.py \
+  --timeline .sumeru/review/timeline.json --chapters chapters
+
+# 拆书结构统计 + 报告原创性检查
+python3 skills/sumeru-deconstruct/scripts/analyze-book.py --file 参考书.txt
+python3 skills/sumeru-deconstruct/scripts/check-derivative.py \
+  --source 参考书.txt --output 拆书报告_某书.md --forbid "原作主角名"
+
+# 完稿检查 + 多平台导出（md/txt/html/epub）
+python3 skills/sumeru-finalize/scripts/build.py --check-only
+python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,html,epub --title "书名"
+```
+
+脚本退出码：`0` 通过 / `1` 存在错误 / `2` 参数或环境错误。
+
 ## 💾 数据持久化
 
 ### 数据存储规范
@@ -325,13 +402,18 @@ npx skills add beijinguang/sumeru
 .sumeru/
 ├── session/          # 会话全局配置与状态
 ├── topic/            # 选题阶段中间数据
+├── deconstruct/      # 拆书阶段中间数据
+│   ├── structure.json        # 逐章结构统计
+│   └── derivative-check.json # 原创性检查
 ├── outline/          # 大纲阶段中间数据
 │   └── chapter-outlines.json  # 完整章节细纲（供 write 阶段并行生成使用）
 ├── write/            # 创作阶段中间数据
 │   ├── original/     # 最初原稿备份（首次修改前备份，之后不覆盖）
 │   └── history/      # 各阶段修改前快照（按 阶段-时间戳 分目录）
 ├── review/           # 审查阶段中间数据
-│   └── fix-plan.json # 修复执行记录（记录所有已执行的修复操作详情）
+│   ├── fix-plan.json # 修复执行记录（记录所有已执行的修复操作详情）
+│   ├── timeline.json # 结构化时间线
+│   └── timeline-check.json # 时间线机器校验结果
 ├── polish/           # 润色阶段中间数据
 └── finalize/         # 完稿阶段中间数据
 ```
@@ -340,6 +422,8 @@ npx skills add beijinguang/sumeru
 ```
 ./
 ├── 选题策划报告.md    # 选题策划阶段最终成果
+├── 拆书数据报告.md    # 拆书阶段机械统计数据
+├── 拆书报告_*.md      # 拆书阶段结构拆解报告
 ├── 小说大纲_*.md      # 大纲设计阶段最终成果
 ├── chapters/         # 章节内容文件
 ├── 剧情审查报告.md    # 逻辑审查阶段最终成果
@@ -352,14 +436,17 @@ npx skills add beijinguang/sumeru
 ## 🎨 核心优势
 
 ### 合规安全
-- 自动生成虚构的人名、地名、势力名，避免侵权风险
-- 三级敏感词检测与修正建议，降低发布风险
-- 符合各大平台内容规范要求
+- 唯一的 IP/合规黑名单源 `skills/sumeru-outline/references/ip-blocklist.md`，覆盖知名角色名、真实人物/地名/机构、谐音碰瓷
+- 四步命名重构法：定音系 → 拆意象 → 做变形 → 撞名检查，从“抄名字”变成“造名字”
+- 完稿阶段自动扫描，命中禁用名称直接阻断导出
+- 三级敏感词检测与修正建议，符合各大平台内容规范
 
 ### 效率提升
 - 多Agent并行创作，大幅缩短批量章节的生成时间
 - 智能爽点排布，遵循网文创作黄金节奏公式
 - 自动追踪伏笔，提醒回收时机
+- 结构化时间线 + 机器校验，时序/年龄/区间矛盾可复现验证
+- 拆书只输出结构模板与方法参数，不产出换皮文本
 
 ### 质量保障
 - 人物性格与剧情逻辑一致性校验
@@ -376,17 +463,16 @@ npx skills add beijinguang/sumeru
 - **并发上限与写入隔离**：同时运行的子Agent默认不超过5个；子Agent只写自己章节的文件，共享文件由调度方汇总
 - **审查更稳**：章节概要前置供全局审查使用；重写章节后检查级联影响；「修复 → 验证」最多2轮；只产出一份审查报告
 - **备份不覆盖**：最初原稿只备份一次，之后每轮修改前的版本按阶段和时间戳单独保存
-- **确定性脚本**：新增章节校验、多平台导出、批量替换、敏感词词表扫描脚本，并附带测试
-- **平台规则配置化**：各平台格式规则集中在 `skills/sumeru-finalize/references/platforms.json`，新增平台只改配置
-- **Skill 瘦身**：description 精简为「做什么 + 何时用 + 不适用场景」，数据结构、平台规则、进阶示例下沉到 `references/` 按需读取
+- **敏感词词表扫描**：新增 `sensitive-scan.py`，按自维护词表做精确匹配；章节校验、导出、批量替换沿用上游脚本
+- **Skill 瘦身**：description 精简为「做什么 + 何时用 + 不适用场景」，数据结构、进阶示例下沉到 `references/` 按需读取
 - **表述校正**：市场分析注明为 AI 知识推理而非实时榜单数据
 
 ## 🤝 参与贡献
 
 欢迎提交Issue和PR来完善须弥写作！
-- 新增Skill需遵循现有架构规范
-- 新增或修改脚本需在 `tests/` 下补充对应用例
-- 提交前运行 `python3 -m unittest discover -s tests` 并确保通过
+- 新增 Skill 需遵循现有架构规范
+- 新增或修改 `scripts/` 下脚本，必须同步在 `tests/` 下补充用例
+- 提交前请运行 `python3 -m unittest discover -s tests -v` 并确保全绿
 
 ## 📄 许可证
 
