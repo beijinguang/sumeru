@@ -23,7 +23,9 @@ import hashlib
 import html
 import json
 import re
+import shutil
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -324,29 +326,26 @@ def write_epub(chapters, profile, out_file, title, author):
         'media-type="application/oebps-package+xml"/></rootfiles></container>\n'
     )
 
-    tmp = out_file.parent / "_epub_tmp"
-    if tmp.exists():
-        import shutil
-        shutil.rmtree(tmp)
-    (tmp / "META-INF").mkdir(parents=True)
-    (tmp / "OEBPS").mkdir(parents=True)
-    (tmp / "META-INF" / "container.xml").write_text(container, encoding="utf-8")
-    for filename in ("content.opf", "nav.xhtml", "style.css"):
-        (tmp / "OEBPS" / filename).write_text(
-            (out_file.parent / filename).read_text(encoding="utf-8"), encoding="utf-8")
-    for name, _ in chapter_files:
-        (tmp / "OEBPS" / name).write_text(
-            (out_file.parent / name).read_text(encoding="utf-8"), encoding="utf-8")
+    with tempfile.TemporaryDirectory(prefix="sumeru_epub_") as tmp_name:
+        tmp = Path(tmp_name)
+        (tmp / "META-INF").mkdir(parents=True)
+        (tmp / "OEBPS").mkdir(parents=True)
+        (tmp / "META-INF" / "container.xml").write_text(container, encoding="utf-8")
+        for filename in ("content.opf", "nav.xhtml", "style.css"):
+            (tmp / "OEBPS" / filename).write_text(
+                (out_file.parent / filename).read_text(encoding="utf-8"), encoding="utf-8")
+        for name, _ in chapter_files:
+            (tmp / "OEBPS" / name).write_text(
+                (out_file.parent / name).read_text(encoding="utf-8"), encoding="utf-8")
 
-    with zipfile.ZipFile(out_file, "w") as zf:
-        zf.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
-        zf.write(tmp / "META-INF" / "container.xml", "META-INF/container.xml")
-        for file in sorted((tmp / "OEBPS").rglob("*")):
-            if file.is_file():
-                zf.write(file, str(file.relative_to(tmp)))
+        with zipfile.ZipFile(out_file, "w") as zf:
+            zf.writestr("mimetype", "application/epub+zip", compress_type=zipfile.ZIP_STORED)
+            zf.write(tmp / "META-INF" / "container.xml", "META-INF/container.xml")
+            for file in sorted((tmp / "OEBPS").rglob("*")):
+                if file.is_file():
+                    zf.write(file, str(file.relative_to(tmp)))
 
-    import shutil
-    shutil.rmtree(tmp)
+    # TemporaryDirectory 退出即自动清理，异常中断也不残留
     for stray in ("content.opf", "nav.xhtml", "style.css"):
         (out_file.parent / stray).unlink(missing_ok=True)
     for name, _ in chapter_files:

@@ -16,7 +16,7 @@ POV 倾向、高频重复短语。定性结论（爽点、人物功能位、伏�
   # 指定输出目录
   python3 skills/sumeru-deconstruct/scripts/analyze-book.py --file 参考书.txt --out .sumeru/deconstruct
 
-退出码：0 成功 / 1 输入错误 / 2 参数错误
+退出码：0 成功 / 1 输入内容无效（未解析到章节）/ 2 输入路径不存在等环境错误（全局约定）
 """
 
 import argparse
@@ -253,14 +253,14 @@ def main():
         path = Path(args.file)
         if not path.exists():
             print(f"❌ 文件不存在：{args.file}")
-            return 1
+            return 2
         raw_chapters = split_chapters_from_text(path.read_text(encoding="utf-8", errors="ignore"))
         source = path.name
     else:
         path = Path(args.chapters)
         if not path.exists():
             print(f"❌ 目录不存在：{args.chapters}")
-            return 1
+            return 2
         raw_chapters = split_chapters_from_dir(path)
         source = str(path)
 
