@@ -1,0 +1,30 @@
+CLAUDE.md
+  h_414dea22084ef6 100-101
+skills/_lib/sumeru_common.py
+  h_414dea22084ef6 1-58
+skills/sumeru-deconstruct/scripts/analyze-book.py
+  h_414dea22084ef6 29-31
+skills/sumeru-deconstruct/scripts/check-derivative.py
+  h_414dea22084ef6 29-31
+skills/sumeru-finalize/scripts/build.py
+  h_414dea22084ef6 30-32,110
+skills/sumeru-outline/scripts/plan-chapters.py
+  h_414dea22084ef6 26-28
+skills/sumeru-review/scripts/chapter-word-counter.py
+  h_414dea22084ef6 19-21,89-90
+skills/sumeru-write/scripts/check-chapters.py
+  h_414dea22084ef6 26-28,111-112,131
+tests/test_tools.py
+  h_414dea22084ef6 402-413
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "4ddc398c1490b9b7e74defe9b371868574fdb46c",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
