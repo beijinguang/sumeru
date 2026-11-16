@@ -48,7 +48,7 @@ skills/
 | 短篇 | 20 万字 | 40-70 章 | 3000 字 |
 | 中篇 | 20-50 万字 | 70-170 章 | 3000 字 |
 | 长篇 | 50-100 万字 | 170-340 章 | 3000 字 |
-| 超长篇 | 100 万字以上 | 340 章以上 | 3000 字 |
+| 超长篇 | 100 万字以上（预设 2,000,000） | 340 章以上 | 3000 字 |
 
 平台差异：起点 3000-5000 字/章、番茄 2000-3000、晋江 2500-4000、纵横 3000-6000、17K 2000-4000。
 章节数由 `plan-chapters.py` 计算，不手算。
@@ -373,6 +373,7 @@ python3 -m unittest discover -s tests -v
 ```bash
 # 章节规划 / 细纲骨架 / 细纲校验
 python3 skills/sumeru-outline/scripts/plan-chapters.py --total-words 1000000 --chapter-words 3000 --volumes 5
+python3 skills/sumeru-outline/scripts/plan-chapters.py --total-words 300000 --output .sumeru/outline/chapter-plan.json  # 章节/分卷规划单独落盘
 python3 skills/sumeru-outline/scripts/plan-chapters.py --validate .sumeru/outline/chapter-outlines.json
 
 # 章节结构 / 命名 / 缺章校验
@@ -411,18 +412,24 @@ python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,h
 ├── topic/            # 选题阶段中间数据
 ├── deconstruct/      # 拆书阶段中间数据
 │   ├── structure.json        # 逐章结构统计
-│   └── derivative-check.json # 原创性检查
+│   └── derivative-check.json # 原创性检查（passed=true 才能交付/传给下游）
 ├── outline/          # 大纲阶段中间数据
-│   └── chapter-outlines.json  # 完整章节细纲（供 write 阶段并行生成使用）
+│   ├── chapter-plan.json      # 章节/分卷规划（plan-chapters.py --output 显式生成）
+│   ├── chapter-outlines.json  # 完整章节细纲（供 write 阶段并行生成使用）
+│   └── compliance-check.json  # 命名合规检查（passed=true 才能进入写作）
 ├── write/            # 创作阶段中间数据
 │   ├── original/     # 最初原稿备份（首次修改前备份，之后不覆盖）
 │   └── history/      # 各阶段修改前快照（按 阶段-时间戳 分目录）
 ├── review/           # 审查阶段中间数据
 │   ├── fix-plan.json # 修复执行记录（记录所有已执行的修复操作详情）
 │   ├── timeline.json # 结构化时间线
-│   └── timeline-check.json # 时间线机器校验结果
+│   ├── timeline-check.json # 时间线机器校验结果
+│   └── word-count.json     # 字数统计（chapter-word-counter.py 输出）
 ├── polish/           # 润色阶段中间数据
 └── finalize/         # 完稿阶段中间数据
+    ├── stats.json    # 统计与导出结果
+    ├── report.md     # 完稿校验报告
+    └── sensitive-hits.json # 敏感词词表命中记录（sensitive-scan.py 输出）
 ```
 
 #### 用户可见输出（当前工作目录）
@@ -434,8 +441,10 @@ python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,h
 ├── 小说大纲_*.md      # 大纲设计阶段最终成果
 ├── chapters/         # 章节内容文件
 ├── 剧情审查报告.md    # 逻辑审查阶段最终成果
+├── 完稿校验报告.md    # 完稿校验阶段最终成果
 ├── publish/          # 完稿导出的各平台格式文件
-└── output/           # 全流程创作的最终输出目录
+└── output/           # 仅当通过 worldbuilder 的输出目录参数指定了子目录时，
+                      # 用户可见文档集中存放于此；默认直接放在当前工作目录
 ```
 
 所有创作过程支持断点恢复，中断后无需重头开始。
@@ -472,13 +481,16 @@ python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,h
 - **备份不覆盖**：最初原稿只备份一次，之后每轮修改前的版本按阶段和时间戳单独保存
 - **敏感词词表扫描**：新增 `sensitive-scan.py`，按自维护词表做精确匹配；章节校验、导出、批量替换沿用上游脚本
 - **Skill 瘦身**：description 精简为「做什么 + 何时用 + 不适用场景」，数据结构、进阶示例下沉到 `references/` 按需读取
+- **公共工具模块**：新增 `skills/_lib/sumeru_common.py`，字数统计/标题剥离/区间解析等全项目唯一实现，字数口径统一（剥离标题行后计数）
+- **门禁加固**：脚本退出码全局统一（0 通过 / 1 存在错误 / 2 参数或环境错误）；黑名单解析失败、细纲 JSON 损坏、非法导出格式等异常一律显式报错退出，不再静默降级
 - **表述校正**：市场分析注明为 AI 知识推理而非实时榜单数据
 
 ## 🤝 参与贡献
 
 欢迎提交Issue和PR来完善须弥写作！
 - 新增 Skill 需遵循现有架构规范
-- 新增或修改 `scripts/` 下脚本，必须同步在 `tests/` 下补充用例
+- 新增或修改 `scripts/` 下脚本，必须同步在 `tests/` 下补充用例（上游脚本用例在 `test_tools.py`，二开新增脚本用例在 `test_scripts.py`）
+- 公共函数（字数统计、标题剥离、区间解析等）一律从 `skills/_lib/sumeru_common.py` 导入，禁止在脚本内复制实现
 - 提交前请运行 `python3 -m unittest discover -s tests -v` 并确保全绿
 
 ## 📄 许可证
