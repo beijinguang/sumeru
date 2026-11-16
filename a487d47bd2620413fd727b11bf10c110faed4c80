@@ -1,0 +1,18 @@
+CLAUDE.md
+  h_414dea22084ef6 41
+README.md
+  h_414dea22084ef6 51,376,415,417-419,426-427,430-432,444,446-447,484-485,492-493
+skills/sumeru-outline/SKILL.md
+  h_414dea22084ef6 123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "a487d47bd2620413fd727b11bf10c110faed4c80",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
