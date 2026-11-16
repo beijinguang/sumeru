@@ -35,6 +35,7 @@ REQUIRED_CHAPTER_FIELDS = [
 DEFAULT_CHAPTER_WORDS = 3000
 
 # 篇幅 → 建议总字数（与 AGENTS.md / sumeru-outline SKILL.md 保持一致）
+# 超长篇 2,000,000 为工程默认值（约两年连载量），非口径上限，可用 --total-words 覆盖
 LENGTH_PRESETS = {
     "短篇": 200_000,
     "中篇": 500_000,

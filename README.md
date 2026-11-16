@@ -55,9 +55,16 @@ skills/
 
 ## 🚀 安装方式
 
+环境要求：Python 3.9+（脚本仅依赖标准库，无第三方依赖；CI 覆盖 3.9/3.11/3.13），macOS / Linux。
+
 在Claude Code / OpenCode项目中执行：
 ```bash
 npx skills add beijinguang/sumeru
+```
+
+安装后建议先跑一遍回归测试验证环境：
+```bash
+python3 -m unittest discover -s tests -v
 ```
 
 ## 📖 快速开始
