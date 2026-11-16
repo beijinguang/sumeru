@@ -9,7 +9,7 @@
 - Skill框架：Claude Code Skill系统（兼容OpenCode superpowers体系）
 - 运行环境：macOS / Linux zsh
 - 依赖环境：Python 3.9+（脚本仅依赖标准库；CI 矩阵覆盖 3.9 / 3.11 / 3.13）
-- 当前版本：v0.2.3
+- 当前版本：v0.3.0
 
 ## 核心架构结构
 ```
