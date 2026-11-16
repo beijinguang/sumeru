@@ -26,7 +26,9 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-CHAPTER_TITLE = re.compile(r"^\s*(第[0-9零〇一二三四五六七八九十百千万两]+章[^\n]{0,40})$")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import CHAPTER_TITLE, count_words
+
 DIALOGUE = re.compile(r"“[^”]*”|「[^」]*」|『[^』]*』")
 SENTENCE = re.compile(r"[^。！？…\n]+[。！？…]?")
 CJK = re.compile(r"[\u4e00-\u9fa5]")
@@ -42,10 +44,6 @@ SUSPENSE_WORDS = [
 ]
 FIRST_PERSON = re.compile(r"我(?!们)")
 THIRD_PERSON = re.compile(r"他|她")
-
-
-def count_words(text):
-    return len(CJK.findall(text)) + len(re.findall(r"[a-zA-Z]+", text))
 
 
 def split_chapters_from_text(text):

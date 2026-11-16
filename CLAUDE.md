@@ -97,6 +97,8 @@ python3 skills/sumeru-finalize/scripts/build.py --platform all --format md,txt,h
 
 脚本退出码约定：`0` 通过 / `1` 存在错误 / `2` 参数或环境错误。
 
+公共函数（`count_words` / `strip_title_line` / `parse_int_range` / `CHAPTER_TITLE` / `PLACEHOLDER`）统一从 `skills/_lib/sumeru_common.py` 导入，禁止在脚本内复制实现；字数统计口径统一为「剥离文件内标题行后计数」。
+
 ### 测试
 
 ```bash

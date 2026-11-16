@@ -399,6 +399,18 @@ class TimelineTest(unittest.TestCase):
         self.assertTrue(strict_errors)
 
 
+class WordCountConsistencyTest(unittest.TestCase):
+    """字数口径统一：同一章节文本，各工具统计结果必须一致（剥离标题行后计数）"""
+
+    def test_word_count_semantics_unified(self):
+        text = "第1章 初见\n\n陆照野站在临川城头，看云海翻涌。\n\n他说，好。"
+        expected = check.count_words(check.strip_title_line(text))
+        self.assertGreater(expected, 0)
+        self.assertEqual(build.count_words(build.strip_title_line(text)), expected)
+        # counter.count_words 返回 (total, hanzi, english, punct)，total 应与口径一致
+        self.assertEqual(counter.count_words(counter.strip_title_line(text))[0], expected)
+
+
 class CliExitCodeTest(unittest.TestCase):
     """CLI 级退出码约定测试：0 通过 / 1 检查失败 / 2 参数或环境错误"""
 

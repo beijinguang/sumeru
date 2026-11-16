@@ -26,7 +26,9 @@ import re
 import sys
 from pathlib import Path
 
-CHAPTER_TITLE = re.compile(r"^\s*(第[0-9零〇一二三四五六七八九十百千万两]+章[^\n]{0,40})$")
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import CHAPTER_TITLE
+
 CJK = re.compile(r"[\u4e00-\u9fa5]")
 
 

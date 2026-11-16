@@ -23,6 +23,9 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import parse_int_range
+
 REQUIRED_CHAPTER_FIELDS = [
     "chapterNumber", "chapterTitle", "suggestedWords", "coreEvent",
     "characters", "plotProgression", "coolPoint", "suspense",
@@ -38,20 +41,6 @@ LENGTH_PRESETS = {
     "长篇": 1_000_000,
     "超长篇": 2_000_000,
 }
-
-
-def parse_int_range(value):
-    """解析 '3000-4000' 或 3000 形式的字数建议，返回 (min, max)"""
-    if isinstance(value, int):
-        return value, value
-    if not isinstance(value, str):
-        return None
-    nums = [int(n) for n in re.findall(r"\d+", value)]
-    if not nums:
-        return None
-    if len(nums) == 1:
-        return nums[0], nums[0]
-    return min(nums[:2]), max(nums[:2])
 
 
 def build_plan(total_words, chapter_words, volumes):

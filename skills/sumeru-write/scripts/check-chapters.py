@@ -23,30 +23,15 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import PLACEHOLDER, count_words, parse_int_range, strip_title_line
+
 NAME_PATTERN = re.compile(r"^(\d{3,4})-(.+)\.md$")
 BAD_NAME_HINTS = [
     (re.compile(r"^第\d+章"), "文件名不要带「第X章」前缀"),
     (re.compile(r"^\d{1,2}-"), "章节号必须三位零填充（001-）"),
     (re.compile(r"_"), "章节号与标题之间用短横线 -，不要用下划线"),
 ]
-PLACEHOLDER = re.compile(r"(TODO|待补充|待完善|XXX|\[占位\])")
-
-
-def count_words(text):
-    hanzi = len(re.findall(r"[\u4e00-\u9fa5]", text))
-    english = len(re.findall(r"[a-zA-Z]+", text))
-    return hanzi + english
-
-
-def parse_range(value):
-    if isinstance(value, int):
-        return value, value
-    nums = [int(n) for n in re.findall(r"\d+", str(value or ""))]
-    if not nums:
-        return None
-    if len(nums) == 1:
-        return nums[0], nums[0]
-    return min(nums[:2]), max(nums[:2])
 
 
 def load_outline(path):
@@ -123,7 +108,8 @@ def check(chapters_dir, outline_path=None, strict=False):
     stats_rows = []
     for ch in chapters:
         text = Path(ch["path"]).read_text(encoding="utf-8", errors="ignore")
-        words = count_words(text)
+        # 统一字数口径：剥离文件内标题行后再计数（与 build.py 一致）
+        words = count_words(strip_title_line(text))
         total_words += words
         row = {"number": ch["number"], "file": ch["file"], "words": words}
 
@@ -142,7 +128,7 @@ def check(chapters_dir, outline_path=None, strict=False):
                     warnings.append(
                         f"{ch['file']}：标题与细纲不一致（细纲：{expected_title}）"
                     )
-                rng = parse_range(ref.get("suggestedWords"))
+                rng = parse_int_range(ref.get("suggestedWords"))
                 if rng:
                     low, high = rng
                     if words < low * 0.8 or words > high * 1.2:

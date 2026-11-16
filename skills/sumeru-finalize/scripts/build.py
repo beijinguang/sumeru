@@ -27,6 +27,9 @@ import sys
 import zipfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import PLACEHOLDER, count_words, strip_title_line
+
 DEFAULT_PLATFORMS = {
     "qidian": {
         "label": "起点", "indent": "\u3000\u3000", "blank_between": True,
@@ -51,19 +54,11 @@ DEFAULT_PLATFORMS = {
 }
 
 CHAPTER_NAME = re.compile(r"^(\d{3,4})-(.+)\.md$")
-PLACEHOLDER = re.compile(r"(TODO|待补充|待完善|XXX|\[占位\])")
 ASCII_PUNCT = re.compile(r"[\u4e00-\u9fa5][,.!?;:]|[,.!?;:][\u4e00-\u9fa5]")
 REPEAT_CHAR = re.compile(r"(的的|了了|是是|在在|他他|她她|我我)")
 
 
 # ---------------------------------------------------------------- 基础工具
-
-def count_words(text):
-    """中文按字、英文按词；标点不计入（与平台口径一致）"""
-    hanzi = len(re.findall(r"[\u4e00-\u9fa5]", text))
-    english = len(re.findall(r"[a-zA-Z]+", text))
-    return hanzi + english
-
 
 def load_blocklist(path):
     """从 ip-blocklist.md 的「绝对禁用清单」小节提取名称集合。
@@ -112,12 +107,7 @@ def collect_chapters(chapters_dir):
 
 def normalize_body(text):
     """去掉标题行、统一空行、清理行尾空白"""
-    lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
-    # 移除文件内自带的标题行（第X章 ...），标题由导出版式统一生成
-    while lines and not lines[0].strip():
-        lines.pop(0)
-    if lines and re.match(r"^\s*第\s*\d+\s*章", lines[0]):
-        lines.pop(0)
+    lines = strip_title_line(text).split("\n")
     cleaned = [line.rstrip() for line in lines]
     text = "\n".join(cleaned)
     text = re.sub(r"\n{3,}", "\n\n", text)

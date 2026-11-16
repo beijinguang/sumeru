@@ -16,6 +16,9 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Tuple
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))  # skills/
+from _lib.sumeru_common import strip_title_line
+
 # 配置参数
 DEFAULT_CHAPTER_PATTERN = r"\d{3,4}-.*\.md"    # 项目章节命名规范：001-标题.md（三位零填充，兼容四位的1000+章）
 DEFAULT_WORD_RANGE = (3000, 5000)  # 默认理想区间：起点口径 3000-5000 字（其他平台用 --min/--max 覆盖）
@@ -83,7 +86,8 @@ def analyze_chapters(chapter_files: List[Path],
             with open(file_path, 'r', encoding='utf-8') as f:
                 content = f.read()
 
-            words, hanzi, english, punctuation = count_words(content)
+            # 统一字数口径：剥离文件内标题行后再计数（与 check-chapters / build 一致）
+            words, hanzi, english, punctuation = count_words(strip_title_line(content))
             total_words += words
 
             if words < min_words:
