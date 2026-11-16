@@ -1,0 +1,14 @@
+skills/sumeru-deconstruct/scripts/check-derivative.py
+  h_414dea22084ef6 66-69,75,79-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "75dfbd6db89a001d60dbcd6b7f7e2220e8fe2470",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
