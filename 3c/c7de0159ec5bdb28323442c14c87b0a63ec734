@@ -1,0 +1,14 @@
+webui/README.md
+  h_414dea22084ef6 29-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "3cc7de0159ec5bdb28323442c14c87b0a63ec734",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
