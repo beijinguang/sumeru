@@ -1,0 +1,26 @@
+README.md
+  h_414dea22084ef6 70-82
+webui/README.md
+  h_414dea22084ef6 1-41
+webui/lib/backup.py
+  h_414dea22084ef6 30-31
+webui/server.py
+  h_414dea22084ef6 130-145
+webui/static/app.js
+  h_414dea22084ef6 1-362
+webui/static/index.html
+  h_414dea22084ef6 1-152
+webui/static/style.css
+  h_414dea22084ef6 1-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "f3030e4d5bc6b97fcffd8ea31dfcbb02e3d8b661",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
