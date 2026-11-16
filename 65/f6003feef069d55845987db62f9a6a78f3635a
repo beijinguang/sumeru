@@ -1,0 +1,60 @@
+.gitignore
+  h_414dea22084ef6 4-8
+CLAUDE.md
+  h_414dea22084ef6 6-7,11,82,186-188,223-232,238-239
+README.md
+  h_414dea22084ef6 7-8,19-20,41,61-63,369,371,373-382,384,386-389
+skills/sumeru-finalize/SKILL.md
+  h_414dea22084ef6 3,58-76,123-131,161-163
+skills/sumeru-finalize/references/platform-formats.md
+  h_414dea22084ef6 1-42
+skills/sumeru-finalize/references/platforms.json
+  h_414dea22084ef6 1-84
+skills/sumeru-finalize/references/sensitive-content-standard.md
+  h_414dea22084ef6 1-24
+skills/sumeru-finalize/references/sensitive-words.txt
+  h_414dea22084ef6 1-6
+skills/sumeru-finalize/scripts/batch-replace.py
+  h_414dea22084ef6 1-137
+skills/sumeru-finalize/scripts/export-platforms.py
+  h_414dea22084ef6 1-157
+skills/sumeru-finalize/scripts/sensitive-scan.py
+  h_414dea22084ef6 1-97
+skills/sumeru-outline/SKILL.md
+  h_414dea22084ef6 3,200-203
+skills/sumeru-outline/references/data-schemas.md
+  h_414dea22084ef6 1-145
+skills/sumeru-polish/SKILL.md
+  h_414dea22084ef6 3,12
+skills/sumeru-review/SKILL.md
+  h_414dea22084ef6 3,18,30,59,71,109,141,144-145,147-156,185
+skills/sumeru-review/scripts/chapter-word-counter.py
+  h_414dea22084ef6 111
+skills/sumeru-topic/SKILL.md
+  h_414dea22084ef6 3,77
+skills/sumeru-topic/references/options-schema.md
+  h_414dea22084ef6 1-54
+skills/sumeru-worldbuilder/SKILL.md
+  h_414dea22084ef6 3,14-18,42,52-54,58,60,62,64-80,82-83,87-104,106-110,127-142,144-147,151-163,297,299,306-307,337-339,342-346
+skills/sumeru-worldbuilder/references/advanced-scenarios.md
+  h_414dea22084ef6 1-44
+skills/sumeru-worldbuilder/references/progress-schema.md
+  h_414dea22084ef6 1-123
+skills/sumeru-write/SKILL.md
+  h_414dea22084ef6 3,187
+skills/sumeru-write/scripts/validate-chapters.py
+  h_414dea22084ef6 1-126
+tests/test_scripts.py
+  h_414dea22084ef6 1-171
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "65f6003feef069d55845987db62f9a6a78f3635a",
+  "prompts": {},
+  "humans": {
+    "h_414dea22084ef6": {
+      "author": "wangjinguang6 <wangjinguang6@jd.com>"
+    }
+  }
+}
